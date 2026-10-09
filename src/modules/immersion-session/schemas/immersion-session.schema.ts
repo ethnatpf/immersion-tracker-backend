@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes } from "mongoose";
+import { Content } from "~/modules/content/schemas/content.schema.js";
 
 @Schema()
 export class ImmersionSession {
@@ -18,6 +19,9 @@ export class ImmersionSession {
     index: true,
   })
   created_at: Date;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: "Content", required: true })
+  content: Content;
 }
 
 export type ImmersionSessionDocument = HydratedDocument<ImmersionSession>;
