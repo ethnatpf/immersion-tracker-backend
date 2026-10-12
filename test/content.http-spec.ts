@@ -19,7 +19,9 @@ describe("POST /content", () => {
 
   beforeAll(async () => {
     const fixture = createAuthFixture();
-    app = await createTestApp(fixture.authorization);
+    app = await createTestApp(fixture.authorization, {
+      languageIds: [validContent.language],
+    });
     token = fixture.createToken();
     userId = fixture.userId;
   });
@@ -83,6 +85,35 @@ describe("POST /content", () => {
     await postContent()
       .send({ ...validContent, title: "a".repeat(351) })
       .expect(400);
+  });
+
+  it.each([
+    "not-an-id",
+    "abcdefghijkl",
+    "507f1f77bcf86cd79943901",
+    "507f1f77bcf86cd7994390110",
+    "507f1f77bcf86cd79943901z",
+  ])(
+    "rejects malformed language ID %s before calling the service",
+    async (language) => {
+      const create = vi.spyOn(app.get(ContentService), "create");
+      try {
+        await postContent()
+          .send({ ...validContent, language })
+          .expect(400);
+        expect(create).not.toHaveBeenCalled();
+      } finally {
+        create.mockRestore();
+      }
+    },
+  );
+
+  it("rejects a valid ObjectId that does not reference an existing language", async () => {
+    const response = await postContent()
+      .send({ ...validContent, language: "507f1f77bcf86cd799439012" })
+      .expect(400);
+
+    expect(response.body.message).toBe("Language does not exist");
   });
 
   it.each(["podcast", "BOOK", "movie"])(

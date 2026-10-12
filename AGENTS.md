@@ -42,10 +42,10 @@
 ## HTTP test coverage
 
 - Whenever adding a protected endpoint, add its HTTP method and concrete path to
-  `protectedRoutes` in `test/protected-routes.e2e-spec.ts`. Update entries when
+  `protectedRoutes` in `test/protected-routes.http-spec.ts`. Update entries when
   endpoints are renamed or removed. Include each method separately and substitute
   concrete values for path parameters.
-- Keep detailed JWT verification cases in `test/authorization.e2e-spec.ts`;
+- Keep detailed JWT verification cases in `test/authorization.http-spec.ts`;
   do not duplicate expiration, issuer, audience, and signature cases for every
   endpoint. Add normal authenticated behavior tests for new routes separately.
 - Reuse `createAuthFixture()` from `test/helpers/auth.fixture.ts` for signed
@@ -60,11 +60,14 @@
 
 ## Commands and verification
 
-- `npm test` runs unit tests (`*.spec.ts`).
-- `npm run test:e2e` runs HTTP suites (`*.e2e-spec.ts`) without a live database.
+- `npx vitest run` runs unit tests (`*.spec.ts`).
+- `npm run test:http` runs HTTP suites (`*.http-spec.ts`) without a live database.
 - `npm run test:integration` runs database suites (`*.integration-spec.ts`) and
   loads `.env`. It requires a reachable, dedicated test database configured through
   `MONGODB_TEST_URL`; never point it at production. Clean up test-created records.
+- `npm run test:all` runs unit, HTTP, and database integration suites.
+- Reserve `*.e2e-spec.ts` for future complete HTTP-to-database tests. No e2e
+  suite or runner is configured yet.
 - `npx tsc --noEmit --incremental false` checks types without updating build caches.
 - `npm run lint` runs the repository lint checks. Report existing unrelated
   warnings separately from issues introduced by the change.

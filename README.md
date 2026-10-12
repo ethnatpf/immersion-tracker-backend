@@ -47,15 +47,22 @@ $ bun run start:prod
 ## Run tests
 
 ```bash
-# unit tests
-$ bun run test
+# unit tests (*.spec.ts)
+$ npx vitest run
 
-# e2e tests
-$ bun run test:e2e
+# HTTP tests with MongoDB stubbed (*.http-spec.ts)
+$ npm run test:http
 
-# test coverage
-$ bun run test:cov
+# database integration tests (*.integration-spec.ts)
+# requires a dedicated MONGODB_TEST_URL in .env
+$ npm run test:integration
+
+# all configured test suites
+$ npm run test:all
 ```
+
+The `*.e2e-spec.ts` suffix is reserved for future tests covering the complete
+HTTP-to-database path. No e2e suite or runner is configured yet.
 
 ## Deployment
 

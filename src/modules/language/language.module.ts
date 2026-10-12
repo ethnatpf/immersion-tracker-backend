@@ -11,5 +11,6 @@ import { Language, LanguageSchema } from "./schemas/language.schema.js";
       },
     ]),
   ],
+  exports: [MongooseModule],
 })
 export class LanguageModule {}

@@ -23,14 +23,23 @@ class ModelStub {
   }
 }
 
-export async function createTestApp(authorization: AuthOptions) {
+export async function createTestApp(
+  authorization: AuthOptions,
+  options: { languageIds?: string[] } = {},
+) {
   const builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(getConnectionToken())
     .useValue({ close: async () => {} });
 
-  for (const model of [Content, ImmersionSession, Language]) {
+  for (const model of [Content, ImmersionSession]) {
     builder.overrideProvider(getModelToken(model.name)).useValue(ModelStub);
   }
+  const languageIds = new Set(options.languageIds ?? []);
+  builder.overrideProvider(getModelToken(Language.name)).useValue({
+    exists: ({ _id }: { _id: string }) => ({
+      exec: async () => (languageIds.has(_id.toLowerCase()) ? { _id } : null),
+    }),
+  });
 
   const module = await builder.compile();
   const app = module.createNestApplication();

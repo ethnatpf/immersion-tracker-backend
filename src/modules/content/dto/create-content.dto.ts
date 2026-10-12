@@ -1,5 +1,6 @@
 import {
   IsIn,
+  IsMongoId,
   IsNotEmpty,
   IsString,
   IsUrl,
@@ -20,10 +21,13 @@ export class CreateContentDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsMongoId()
   language: string;
 
   // Only omission is optional; null must still fail validation.
-  @ValidateIf((_object: CreateContentDto, value: unknown) => value !== undefined)
+  @ValidateIf(
+    (_object: CreateContentDto, value: unknown) => value !== undefined,
+  )
   @IsString()
   @IsUrl({ protocols: ["http", "https"], require_protocol: true })
   url?: string;

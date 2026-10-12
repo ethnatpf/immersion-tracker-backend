@@ -1,5 +1,4 @@
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
 import ts from "typescript";
 
 export default defineConfig({
@@ -34,6 +33,6 @@ export default defineConfig({
   test: {
     globals: true,
     root: "./",
-    include: ["**/*.e2e-spec.ts"],
+    include: ["**/*.http-spec.ts"],
   },
 });

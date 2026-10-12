@@ -1,8 +1,9 @@
 import "reflect-metadata";
+import { BadRequestException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { ContentModule } from "./content.module.js";
 import { ContentService } from "./content.service.js";
 import { Content } from "./schemas/content.schema.js";
@@ -96,5 +97,19 @@ describe("ContentService database integration", () => {
     const stored = await contents.findById(created._id).lean().exec();
     expect(stored?.url).toBe(url);
     expect(await contents.countDocuments({ user_id: userId })).toBe(1);
+  });
+
+  it("rejects a nonexistent language without persisting content", async () => {
+    const language = new Types.ObjectId().toHexString();
+    expect(await languages.exists({ _id: language })).toBeNull();
+
+    await expect(
+      service.create(
+        { title: input.title, type: input.type, language },
+        userId,
+      ),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(await contents.countDocuments({ user_id: userId })).toBe(0);
   });
 });
