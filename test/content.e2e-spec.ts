@@ -3,8 +3,9 @@ import { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { createAuthFixture } from "./helpers/auth.fixture.js";
 import { createTestApp } from "./helpers/create-test-app.js";
+import { ContentService } from "../src/modules/content/content.service.js";
 
-describe("POST /content validation", () => {
+describe("POST /content", () => {
   let app: INestApplication;
 
   const validContent = {
@@ -14,11 +15,13 @@ describe("POST /content validation", () => {
   };
 
   let token: string;
+  let userId: string;
 
   beforeAll(async () => {
     const fixture = createAuthFixture();
     app = await createTestApp(fixture.authorization);
     token = fixture.createToken();
+    userId = fixture.userId;
   });
 
   function postContent() {
@@ -29,6 +32,30 @@ describe("POST /content validation", () => {
 
   afterAll(async () => {
     await app?.close();
+  });
+
+  it("calls the service with the authenticated user and returns the created content", async () => {
+    const create = vi.spyOn(app.get(ContentService), "create");
+    try {
+      const response = await postContent().send(validContent).expect(201);
+
+      expect(create).toHaveBeenCalledExactlyOnceWith(validContent, userId);
+      expect(response.body).toMatchObject({
+        ...validContent,
+        user_id: userId,
+        completed: false,
+      });
+    } finally {
+      create.mockRestore();
+    }
+  });
+
+  it("uses the verified JWT subject even when the body supplies another owner", async () => {
+    const response = await postContent()
+      .send({ ...validContent, user_id: "auth0|another-user" })
+      .expect(201);
+
+    expect(response.body.user_id).toBe(userId);
   });
 
   describe.each(["title", "type", "language"] as const)(
