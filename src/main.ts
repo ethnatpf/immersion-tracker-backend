@@ -1,6 +1,6 @@
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module.js";
+import { configureApp } from "./configure-app.js";
 
 async function bootstrap() {
   if (!process.env.MONGODB_URL) {
@@ -13,7 +13,7 @@ async function bootstrap() {
       shadow: "warn",
     },
   });
-  app.useGlobalPipes(new ValidationPipe());
+  configureApp(app);
   await app.listen(process.env.PORT ?? 3000);
 }
 await bootstrap();
