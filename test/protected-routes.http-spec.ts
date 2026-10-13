@@ -8,7 +8,10 @@ import { createTestApp } from "./helpers/create-test-app.js";
 const protectedRoutes: {
   method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options";
   path: string;
-}[] = [{ method: "post", path: "/content" }];
+}[] = [
+  { method: "post", path: "/content" },
+  { method: "get", path: "/content/search" },
+];
 
 describe("Protected routes", () => {
   let app: INestApplication;

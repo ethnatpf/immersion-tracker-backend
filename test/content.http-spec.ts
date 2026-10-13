@@ -4,6 +4,9 @@ import request from "supertest";
 import { createAuthFixture } from "./helpers/auth.fixture.js";
 import { createTestApp } from "./helpers/create-test-app.js";
 import { ContentService } from "../src/modules/content/content.service.js";
+import { getModelToken } from "@nestjs/mongoose";
+import { Model, mongo } from "mongoose";
+import { Content } from "../src/modules/content/schemas/content.schema.js";
 
 describe("POST /content", () => {
   let app: INestApplication;
@@ -34,6 +37,23 @@ describe("POST /content", () => {
 
   afterAll(async () => {
     await app?.close();
+  });
+
+  it("returns 409 with a clear message when content is duplicated", async () => {
+    const model = app.get<Model<Content>>(getModelToken(Content.name));
+    const save = vi.spyOn(model.prototype, "save").mockRejectedValueOnce(
+      new mongo.MongoServerError({ code: 11000, message: "duplicate key" }),
+    );
+    try {
+      const response = await postContent().send(validContent).expect(409);
+      expect(response.body).toEqual({
+        statusCode: 409,
+        error: "Conflict",
+        message: "You already have content with this title and type",
+      });
+    } finally {
+      save.mockRestore();
+    }
   });
 
   it("calls the service with the authenticated user and returns the created content", async () => {

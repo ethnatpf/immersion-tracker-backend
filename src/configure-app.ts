@@ -6,6 +6,6 @@ export function configureApp(
   app: INestApplication,
   options: { authorization?: AuthOptions } = {},
 ): void {
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalGuards(new AuthorizationGuard(options.authorization));
 }
