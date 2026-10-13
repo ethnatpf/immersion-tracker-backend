@@ -29,3 +29,4 @@ export class Content {
 
 export type ContentDocument = HydratedDocument<Content>;
 export const ContentSchema = SchemaFactory.createForClass(Content);
+ContentSchema.index({ user_id: 1, title: 1, type: 1 }, { unique: true });

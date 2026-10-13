@@ -21,6 +21,8 @@ describe("ContentService database integration", () => {
   let input: CreateContentDto;
   let languageId: string;
   const userId = `content-integration-${randomUUID()}`;
+  const otherUserId = `content-integration-${randomUUID()}`;
+  const testOwners = { user_id: { $in: [userId, otherUserId] } };
 
   beforeAll(async () => {
     const uri = process.env.MONGODB_TEST_URL;
@@ -42,6 +44,8 @@ describe("ContentService database integration", () => {
     }).compile();
 
     contents = module.get<Model<Content>>(getModelToken(Content.name));
+    // Wait for index creation before testing database uniqueness.
+    await contents.init();
     languages = module.get<Model<Language>>(getModelToken(Language.name));
     const language = await languages.create({
       code: `test-${randomUUID()}`,
@@ -60,12 +64,12 @@ describe("ContentService database integration", () => {
   });
 
   afterEach(async () => {
-    if (contents) await contents.deleteMany({ user_id: userId });
+    if (contents) await contents.deleteMany(testOwners);
   });
 
   afterAll(async () => {
     try {
-      if (contents) await contents.deleteMany({ user_id: userId });
+      if (contents) await contents.deleteMany(testOwners);
       if (languages && languageId) {
         await languages.deleteOne({ _id: languageId });
       }
@@ -97,6 +101,66 @@ describe("ContentService database integration", () => {
     const stored = await contents.findById(created._id).lean().exec();
     expect(stored?.url).toBe(url);
     expect(await contents.countDocuments({ user_id: userId })).toBe(1);
+  });
+
+  it("rejects the same title and type for the same user without inserting a duplicate", async () => {
+    const anime: CreateContentDto = {
+      title: input.title,
+      type: "anime",
+      language: languageId,
+    };
+    const created = await service.create(anime, userId);
+
+    await expect(service.create(anime, userId)).rejects.toThrow();
+
+    const stored = await contents.find({ user_id: userId }).lean().exec();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]._id.toString()).toBe(created._id.toString());
+  });
+
+  it("allows the same title with different types for the same user", async () => {
+    const anime = await service.create(
+      { title: input.title, type: "anime", language: languageId },
+      userId,
+    );
+    const manga = await service.create(
+      { title: input.title, type: "manga", language: languageId },
+      userId,
+    );
+
+    expect(anime._id.toString()).not.toBe(manga._id.toString());
+    const stored = await contents
+      .find({ user_id: userId, title: input.title })
+      .lean()
+      .exec();
+    expect(stored).toHaveLength(2);
+    expect(stored.map((content) => content.type).sort()).toEqual([
+      "anime",
+      "manga",
+    ]);
+  });
+
+  it("allows different users to create separate content with the same title and type", async () => {
+    const first = await service.create(input, userId);
+    const second = await service.create(input, otherUserId);
+
+    expect(first._id.toString()).not.toBe(second._id.toString());
+    const stored = await contents.find(testOwners).lean().exec();
+    expect(stored).toHaveLength(2);
+    expect(stored).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: input.title,
+          type: input.type,
+          user_id: userId,
+        }),
+        expect.objectContaining({
+          title: input.title,
+          type: input.type,
+          user_id: otherUserId,
+        }),
+      ]),
+    );
   });
 
   it("rejects a nonexistent language without persisting content", async () => {

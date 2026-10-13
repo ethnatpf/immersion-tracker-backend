@@ -21,6 +21,12 @@ docker compose up -d
 cd ..
 ```
 
+Seed the database initially from the project root:
+
+```bash
+bun seed
+```
+
 Start the development server with automatic reload:
 
 ```bash
