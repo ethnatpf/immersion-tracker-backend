@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { getConnectionToken, getModelToken } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import type { AuthOptions } from "express-oauth2-jwt-bearer";
+import type { Types } from "mongoose";
 import { AppModule } from "../../src/app.module.js";
 import { configureApp } from "../../src/configure-app.js";
 import { Content } from "../../src/modules/content/schemas/content.schema.js";
@@ -25,7 +26,15 @@ class ModelStub {
 
 export async function createTestApp(
   authorization: AuthOptions,
-  options: { languageIds?: string[] } = {},
+  options: {
+    languageIds?: string[];
+    languages?: {
+      _id: Types.ObjectId;
+      code: string;
+      name: string;
+      __v?: number;
+    }[];
+  } = {},
 ) {
   const builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(getConnectionToken())
@@ -36,6 +45,11 @@ export async function createTestApp(
   }
   const languageIds = new Set(options.languageIds ?? []);
   builder.overrideProvider(getModelToken(Language.name)).useValue({
+    find: () => ({
+      select: () => ({
+        lean: () => ({ exec: async () => options.languages ?? [] }),
+      }),
+    }),
     exists: ({ _id }: { _id: string }) => ({
       exec: async () => (languageIds.has(_id.toLowerCase()) ? { _id } : null),
     }),

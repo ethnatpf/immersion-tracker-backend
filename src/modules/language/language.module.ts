@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Language, LanguageSchema } from "./schemas/language.schema.js";
+import { LanguageController } from "./language.controller.js";
+import { LanguageService } from "./language.service.js";
 
 @Module({
   imports: [
@@ -12,5 +14,7 @@ import { Language, LanguageSchema } from "./schemas/language.schema.js";
     ]),
   ],
   exports: [MongooseModule],
+  controllers: [LanguageController],
+  providers: [LanguageService],
 })
 export class LanguageModule {}

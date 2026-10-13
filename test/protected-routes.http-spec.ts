@@ -9,6 +9,7 @@ const protectedRoutes: {
   method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options";
   path: string;
 }[] = [
+  { method: "get", path: "/language" },
   { method: "post", path: "/content" },
   { method: "get", path: "/content/search" },
 ];
