@@ -6,11 +6,13 @@ import {
   ImmersionSession,
   ImmersionSessionSchema,
 } from "./schemas/immersion-session.schema.js";
+import { Content, ContentSchema } from "../content/schemas/content.schema.js";
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: ImmersionSession.name, schema: ImmersionSessionSchema },
+      { name: Content.name, schema: ContentSchema },
     ]),
   ],
   controllers: [ImmersionSessionController],
