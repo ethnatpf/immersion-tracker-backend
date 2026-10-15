@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { ContentService } from "../src/modules/content/content.service.js";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
+import { ContentService } from "~/modules/content/content.service.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("GET /content/search", () => {
   let app: INestApplication;

@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { NotFoundException, type INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { ContentService } from "../src/modules/content/content.service.js";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
-import type { ContentDetails } from "../src/modules/content/interfaces/content-details.interface.js";
+import { ContentService } from "~/modules/content/content.service.js";
+import { ContentDetails } from "~/modules/content/interfaces/content-details.interface.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("GET /content/:id", () => {
   let app: INestApplication;

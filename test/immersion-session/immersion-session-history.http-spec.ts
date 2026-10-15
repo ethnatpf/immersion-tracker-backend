@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { ImmersionSessionService } from "../src/modules/immersion-session/immersion-session.service.js";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
+import { ImmersionSessionService } from "~/modules/immersion-session/immersion-session.service.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("GET /immersion-session", () => {
   let app: INestApplication;

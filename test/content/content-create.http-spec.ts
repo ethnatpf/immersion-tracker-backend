@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
-import { ContentService } from "../src/modules/content/content.service.js";
 import { getModelToken } from "@nestjs/mongoose";
 import { Model, mongo } from "mongoose";
-import { Content } from "../src/modules/content/schemas/content.schema.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
+import { Content } from "~/modules/content/schemas/content.schema.js";
+import { ContentService } from "~/modules/content/content.service.js";
 
 describe("POST /content", () => {
   let app: INestApplication;
@@ -41,9 +41,11 @@ describe("POST /content", () => {
 
   it("returns 409 with a clear message when content is duplicated", async () => {
     const model = app.get<Model<Content>>(getModelToken(Content.name));
-    const save = vi.spyOn(model.prototype, "save").mockRejectedValueOnce(
-      new mongo.MongoServerError({ code: 11000, message: "duplicate key" }),
-    );
+    const save = vi
+      .spyOn(model.prototype, "save")
+      .mockRejectedValueOnce(
+        new mongo.MongoServerError({ code: 11000, message: "duplicate key" }),
+      );
     try {
       const response = await postContent().send(validContent).expect(409);
       expect(response.body).toEqual({

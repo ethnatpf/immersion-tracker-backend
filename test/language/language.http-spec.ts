@@ -2,8 +2,8 @@ import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import { Types } from "mongoose";
 import request from "supertest";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("GET /language", () => {
   let app: INestApplication;

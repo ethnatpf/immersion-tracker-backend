@@ -2,13 +2,13 @@ import "reflect-metadata";
 import { NotFoundException, type INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { Mongoose } from "mongoose";
-import { ImmersionSessionService } from "../src/modules/immersion-session/immersion-session.service.js";
+import { ImmersionSessionService } from "../../src/modules/immersion-session/immersion-session.service.js";
 import {
   ImmersionSession,
   ImmersionSessionSchema,
-} from "../src/modules/immersion-session/schemas/immersion-session.schema.js";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
+} from "../../src/modules/immersion-session/schemas/immersion-session.schema.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("PATCH /immersion-session/:id", () => {
   let app: INestApplication;
