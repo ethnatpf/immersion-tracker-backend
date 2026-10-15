@@ -11,6 +11,10 @@ import {
   ImmersionSessionSchema,
 } from "../../src/modules/immersion-session/schemas/immersion-session.schema.js";
 import { Language } from "../../src/modules/language/schemas/language.schema.js";
+import {
+  Timer,
+  TimerSchema,
+} from "../../src/modules/timer/schemas/timer.schema.js";
 
 // Support either Model.create() or new Model().save() without MongoDB.
 class ModelStub {
@@ -73,6 +77,36 @@ export async function createTestApp(
   builder
     .overrideProvider(getModelToken(ImmersionSession.name))
     .useValue(SessionModelStub);
+  const timerModel = new Mongoose().model(Timer.name, TimerSchema);
+  const timers: TimerModelStub[] = [];
+  class TimerModelStub extends ModelStub {
+    declare user_id: string;
+
+    constructor(values: Record<string, unknown>) {
+      super(new timerModel(values).toObject<Record<string, unknown>>());
+    }
+
+    static findOne({ user_id }: { user_id: string }) {
+      return {
+        exec: async () =>
+          timers.find((timer) => timer.user_id === user_id) ?? null,
+      };
+    }
+
+    static exists(query: { user_id: string }) {
+      return this.findOne(query);
+    }
+
+    static override async create(values: Record<string, unknown>) {
+      return new this(values).save();
+    }
+
+    override async save() {
+      timers.push(this);
+      return this;
+    }
+  }
+  builder.overrideProvider(getModelToken(Timer.name)).useValue(TimerModelStub);
   const languageIds = new Set(options.languageIds ?? []);
   builder.overrideProvider(getModelToken(Language.name)).useValue({
     find: () => ({
