@@ -6,7 +6,10 @@ import { type Model, Types } from "mongoose";
 import { ImmersionSessionsModule } from "../immersion-session.module.js";
 import { ImmersionSessionService } from "../immersion-session.service.js";
 import { ImmersionSession } from "../schemas/immersion-session.schema.js";
-import { Content, ContentSchema } from "../../content/schemas/content.schema.js";
+import {
+  Content,
+  ContentSchema,
+} from "../../content/schemas/content.schema.js";
 import {
   Language,
   LanguageSchema,
@@ -255,6 +258,52 @@ describe("ImmersionSessionService history database integration", () => {
     },
   );
 
+  it("filters by content ID before counting and paginating", async () => {
+    const entry = await content();
+    const older = await seedSession(entry, "2026-10-11");
+    const newer = await seedSession(entry, "2026-10-12");
+    await seedSession(await content("Forest adventures"), "2026-10-13");
+    await seedSession(entry, "2026-10-13", 60, otherUserId);
+    const query = { content: entry._id.toHexString(), limit: 1 };
+    expect(await history(query)).toEqual({
+      items: [newer],
+      total: 2,
+      page: 1,
+      limit: 1,
+    });
+    expect(await history({ ...query, page: 2 })).toEqual({
+      items: [older],
+      total: 2,
+      page: 2,
+      limit: 1,
+    });
+    expect(await history({ ...query, page: 3 })).toEqual({
+      items: [],
+      total: 2,
+      page: 3,
+      limit: 1,
+    });
+  });
+
+  it("returns empty history for nonexistent or another user's content ID", async () => {
+    await seedSession(await content());
+    const otherContent = await content(
+      "Other user's content",
+      "book",
+      otherUserId,
+    );
+    await seedSession(otherContent, "2026-10-13", 60, otherUserId);
+    for (const id of [new Types.ObjectId(), otherContent._id]) {
+      const query = { content: id.toHexString(), page: 2 };
+      expect(await history(query)).toEqual({
+        items: [],
+        total: 0,
+        page: 2,
+        limit: 20,
+      });
+    }
+  });
+
   it("supports inclusive, single-day, and open-ended date ranges using session dates", async () => {
     const entry = await content();
     const before = await seedSession(entry, "2024-02-28");
@@ -286,7 +335,9 @@ describe("ImmersionSessionService history database integration", () => {
     await seedSession(entry, "2026-10-14");
     await seedSession(await content("Forest", "anime"), "2026-10-13");
     await seedSession(await content("Ocean"), "2026-10-13");
+    await seedSession(await content("Forest adventures"), "2026-10-13");
     const query = {
+      content: entry._id.toHexString(),
       q: "forrest",
       type: "book" as const,
       start_date: "2026-10-11",

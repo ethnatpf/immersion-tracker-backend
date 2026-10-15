@@ -93,11 +93,14 @@ export class ImmersionSessionService {
         ? { $lte: new Date(`${input.end_date}T00:00:00.000Z`) }
         : {}),
     };
-    const candidates = await this.sessionModel
-      .find({
-        user_id: userId,
-        ...(Object.keys(dateRange).length ? { created_at: dateRange } : {}),
-      })
+    const sessionQuery = this.sessionModel.find({
+      user_id: userId,
+      ...(Object.keys(dateRange).length ? { created_at: dateRange } : {}),
+    });
+    if (input.content !== undefined) {
+      sessionQuery.where("content").equals(input.content);
+    }
+    const candidates = await sessionQuery
       .select({ content: 1, created_at: 1, duration: 1 })
       .sort({ created_at: -1, _id: -1 })
       .populate({

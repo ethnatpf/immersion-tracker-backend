@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsIn,
+  IsMongoId,
   Matches,
   ValidateBy,
   ValidateIf,
@@ -9,6 +10,12 @@ import { PaginatedSearchDto } from "../../../dto/paginated-search.dto.js";
 import type { Content } from "../../content/schemas/content.schema.js";
 
 export class SessionHistoryDto extends PaginatedSearchDto {
+  @ValidateIf(
+    (_object: SessionHistoryDto, value: unknown) => value !== undefined,
+  )
+  @IsMongoId()
+  content?: string;
+
   @ValidateIf(
     (_object: SessionHistoryDto, value: unknown) => value !== undefined,
   )

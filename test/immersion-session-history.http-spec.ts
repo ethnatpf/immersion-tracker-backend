@@ -66,11 +66,13 @@ describe("GET /immersion-session", () => {
 
   it.each([
     { q: "forrest" },
+    { content: "507f1f77bcf86cd799439012" },
     { type: "anime" },
     { start_date: "2024-02-29" },
     { end_date: "2026-10-13" },
     { start_date: "2026-10-13", end_date: "2026-10-13" },
     {
+      content: "507f1f77bcf86cd799439012",
       q: "forrest",
       type: "book",
       start_date: "2024-02-29",
@@ -135,6 +137,15 @@ describe("GET /immersion-session", () => {
   });
 
   it.each([
+    ...[
+      "",
+      "not-an-id",
+      "abcdefghijkl",
+      "507f1f77bcf86cd79943901",
+      "507f1f77bcf86cd7994390110",
+      "507f1f77bcf86cd79943901z",
+    ].map((value) => `content=${value}`),
+    "content=507f1f77bcf86cd799439011&content=507f1f77bcf86cd799439012",
     "type=podcast",
     "type=BOOK",
     "type=",
