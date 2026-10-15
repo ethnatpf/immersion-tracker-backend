@@ -13,4 +13,9 @@ export class TimerController {
   start(@Body() input: StartTimerDto, @CurrentUserId() userId: string) {
     return this.timerService.start(input, userId);
   }
+
+  @Post("stop")
+  stop(@CurrentUserId() userId: string) {
+    return this.timerService.stop(userId);
+  }
 }

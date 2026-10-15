@@ -17,7 +17,7 @@ Start the development containers from the `containers` folder before running the
 
 ```bash
 cd containers
-docker compose up -d
+docker compose up -d --wait
 cd ..
 ```
 
@@ -47,3 +47,10 @@ bun test:all
 HTTP tests use stubbed MongoDB providers. Database integration tests require the
 MongoDB container to be running and `MONGODB_TEST_URL` in `.env` to point to a
 dedicated test database, separate from development or production data.
+
+Stopping a timer uses a MongoDB transaction to create the immersion session and
+delete the timer together. MongoDB must run as a replica set or sharded cluster;
+a standalone server cannot support this operation. The development Compose setup
+initializes a single-node replica set automatically. If the container is already
+running, rerun `docker compose up -d --wait` from `containers` to apply this setup
+while preserving its data volume.

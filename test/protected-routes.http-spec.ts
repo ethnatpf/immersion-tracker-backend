@@ -12,6 +12,7 @@ const protectedRoutes: {
   { method: "get", path: "/language" },
   { method: "post", path: "/content" },
   { method: "post", path: "/timer/start" },
+  { method: "post", path: "/timer/stop" },
   { method: "post", path: "/immersion-session" },
   { method: "get", path: "/immersion-session" },
   { method: "delete", path: "/immersion-session/507f1f77bcf86cd799439011" },
