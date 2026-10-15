@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, mongo, type Types } from "mongoose";
@@ -12,13 +13,63 @@ import type { SearchContentDto } from "./dto/search-content.dto.js";
 import { Language } from "../language/schemas/language.schema.js";
 import { matchesContentTitle } from "../../utils/matches-content-title.js";
 import type { ContentSearchResult } from "./interfaces/content-search.interface.js";
+import type { ContentDetails } from "./interfaces/content-details.interface.js";
+import { ImmersionSession } from "../immersion-session/schemas/immersion-session.schema.js";
 
 @Injectable()
 export class ContentService {
   constructor(
     @InjectModel(Content.name) private readonly contentModel: Model<Content>,
     @InjectModel(Language.name) private readonly languageModel: Model<Language>,
+    @InjectModel(ImmersionSession.name)
+    private readonly immersionSessionModel: Model<ImmersionSession>,
   ) {}
+
+  async getById(id: string, userId: string): Promise<ContentDetails> {
+    const content = await this.contentModel
+      .findOne({ _id: id, user_id: userId })
+      .select({ title: 1, type: 1, completed: 1 })
+      .lean()
+      .exec();
+    if (!content) throw new NotFoundException("Content not found");
+
+    const [summary] = await this.immersionSessionModel
+      .aggregate<{
+        totalTimeSpent: number;
+        lastImmersionSession: Pick<
+          ImmersionSession,
+          "created_at" | "duration" | "progress"
+        > & { _id: Types.ObjectId };
+      }>([
+        { $match: { content: content._id, user_id: userId } },
+        { $sort: { created_at: -1, "progress.end": -1, _id: -1 } },
+        {
+          $group: {
+            _id: null,
+            totalTimeSpent: { $sum: "$duration" },
+            lastImmersionSession: { $first: "$$ROOT" },
+          },
+        },
+      ])
+      .exec();
+    const last = summary?.lastImmersionSession;
+
+    return {
+      id: content._id.toHexString(),
+      title: content.title,
+      type: content.type,
+      completed: content.completed,
+      totalTimeSpent: summary?.totalTimeSpent ?? 0,
+      lastImmersionSession: last
+        ? {
+            id: last._id.toHexString(),
+            created_at: last.created_at.toISOString(),
+            duration: last.duration,
+            ...(last.progress ? { progress: last.progress } : {}),
+          }
+        : null,
+    };
+  }
 
   async search(
     input: SearchContentDto,
