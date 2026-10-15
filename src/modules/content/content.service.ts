@@ -9,6 +9,7 @@ import { Model, mongo, type Types } from "mongoose";
 import { Content } from "./schemas/content.schema.js";
 import type { ContentDocument } from "./schemas/content.schema.js";
 import type { CreateContentDto } from "./dto/create-content.dto.js";
+import type { UpdateContentDto } from "./dto/update-content.dto.js";
 import type { SearchContentDto } from "./dto/search-content.dto.js";
 import { Language } from "../language/schemas/language.schema.js";
 import { matchesContentTitle } from "../../utils/matches-content-title.js";
@@ -112,6 +113,43 @@ export class ContentService {
       page,
       limit,
     };
+  }
+
+  async update(
+    id: string,
+    input: UpdateContentDto,
+    userId: string,
+  ): Promise<ContentDocument> {
+    if (input.language !== undefined) {
+      const language = await this.languageModel
+        .exists({ _id: input.language })
+        .exec();
+      if (!language) throw new BadRequestException("Language does not exist");
+    }
+
+    const changes: UpdateContentDto = {};
+    if (input.title !== undefined) changes.title = input.title;
+    if (input.completed !== undefined) changes.completed = input.completed;
+    if (input.language !== undefined) changes.language = input.language;
+
+    try {
+      const content = await this.contentModel
+        .findOneAndUpdate(
+          { _id: id, user_id: userId },
+          { $set: changes },
+          { returnDocument: "after", runValidators: true },
+        )
+        .exec();
+      if (!content) throw new NotFoundException("Content not found");
+      return content;
+    } catch (error) {
+      if (error instanceof mongo.MongoServerError && error.code === 11000) {
+        throw new ConflictException(
+          "You already have content with this title and type",
+        );
+      }
+      throw error;
+    }
   }
 
   async create(

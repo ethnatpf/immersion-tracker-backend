@@ -17,6 +17,7 @@ const protectedRoutes: {
   { method: "patch", path: "/immersion-session/507f1f77bcf86cd799439011" },
   { method: "get", path: "/content/search" },
   { method: "get", path: "/content/507f1f77bcf86cd799439011" },
+  { method: "patch", path: "/content/507f1f77bcf86cd799439011" },
 ];
 
 describe("Protected routes", () => {

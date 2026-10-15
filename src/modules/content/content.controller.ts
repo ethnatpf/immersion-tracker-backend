@@ -1,10 +1,19 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { CreateContentDto } from "./dto/create-content.dto.js";
 import { SearchContentDto } from "./dto/search-content.dto.js";
 import { ContentService } from "./content.service.js";
 import { CurrentUserId } from "../../decorators/current-user-id.decorator.js";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { GetContentDto } from "./dto/get-content.dto.js";
+import { UpdateContentDto } from "./dto/update-content.dto.js";
 
 @ApiBearerAuth()
 @Controller("content")
@@ -24,5 +33,14 @@ export class ContentController {
   @Post()
   create(@Body() input: CreateContentDto, @CurrentUserId() userId: string) {
     return this.contentService.create(input, userId);
+  }
+
+  @Patch(":id")
+  update(
+    @Param() params: GetContentDto,
+    @Body() input: UpdateContentDto,
+    @CurrentUserId() userId: string,
+  ) {
+    return this.contentService.update(params.id, input, userId);
   }
 }
