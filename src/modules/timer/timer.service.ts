@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, mongo } from "mongoose";
+import { Model, mongo, type Types } from "mongoose";
 import { Content } from "../content/schemas/content.schema.js";
 import {
   ImmersionSession,
@@ -22,6 +22,32 @@ export class TimerService {
     @InjectModel(ImmersionSession.name)
     private readonly sessionModel: Model<ImmersionSession>,
   ) {}
+
+  async getCurrent(userId: string) {
+    const timer = await this.timerModel
+      .findOne({ user_id: userId })
+      .select({ content: 1, started_at: 1 })
+      .populate<{
+        content:
+          (Pick<Content, "title" | "type"> & { _id: Types.ObjectId }) | null;
+      }>({
+        path: "content",
+        select: { title: 1, type: 1 },
+        match: { user_id: userId },
+      })
+      .lean()
+      .exec();
+    if (!timer || !timer.content)
+      throw new NotFoundException("No active timer");
+
+    return {
+      id: timer._id.toHexString(),
+      content_id: timer.content._id.toHexString(),
+      title: timer.content.title,
+      type: timer.content.type,
+      started_at: timer.started_at.toISOString(),
+    };
+  }
 
   async stop(userId: string): Promise<ImmersionSessionDocument> {
     return this.timerModel.db.transaction(async (session) => {
