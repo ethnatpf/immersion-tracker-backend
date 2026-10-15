@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -15,6 +16,10 @@ import { CreateImmersionSessionDto } from "./dto/create-immersion-session.dto.js
 import { ImmersionSessionService } from "./immersion-session.service.js";
 import { SessionHistoryDto } from "./dto/session-history.dto.js";
 import { DeleteImmersionSessionDto } from "./dto/delete-immersion-session.dto.js";
+import {
+  UpdateImmersionSessionDto,
+  UpdateImmersionSessionParamsDto,
+} from "./dto/update-immersion-session.dto.js";
 
 @ApiBearerAuth()
 @Controller("immersion-session")
@@ -43,5 +48,14 @@ export class ImmersionSessionController {
     @CurrentUserId() userId: string,
   ) {
     return this.immersionSessionService.remove(params.id, userId);
+  }
+
+  @Patch(":id")
+  update(
+    @Param() params: UpdateImmersionSessionParamsDto,
+    @Body() input: UpdateImmersionSessionDto,
+    @CurrentUserId() userId: string,
+  ) {
+    return this.immersionSessionService.update(params.id, input, userId);
   }
 }

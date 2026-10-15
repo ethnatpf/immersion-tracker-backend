@@ -7,6 +7,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, type Types } from "mongoose";
 import { Content } from "../content/schemas/content.schema.js";
 import type { CreateImmersionSessionDto } from "./dto/create-immersion-session.dto.js";
+import type { UpdateImmersionSessionDto } from "./dto/update-immersion-session.dto.js";
 import type { SessionHistoryDto } from "./dto/session-history.dto.js";
 import { matchesContentTitle } from "../../utils/matches-content-title.js";
 import type { SessionHistoryResult } from "./interfaces/session-history.interface.js";
@@ -34,6 +35,48 @@ export class ImmersionSessionService {
       .exec();
     if (result.deletedCount === 0)
       throw new NotFoundException("Immersion session does not exist");
+  }
+
+  async update(
+    id: string,
+    input: UpdateImmersionSessionDto,
+    userId: string,
+  ): Promise<ImmersionSessionDocument> {
+    const owner = { _id: id, user_id: userId };
+    const session = await this.sessionModel.findOne(owner).exec();
+    if (!session)
+      throw new NotFoundException("Immersion session does not exist");
+
+    const changes: Partial<ImmersionSession> = {};
+    if (input.created_at !== undefined)
+      changes.created_at = new Date(`${input.created_at}T00:00:00.000Z`);
+    if (input.duration !== undefined) changes.duration = input.duration;
+    if (input.progress !== undefined) {
+      const unit = input.progress.unit ?? session.progress?.unit;
+      if (unit === undefined)
+        throw new BadRequestException(
+          "Progress unit is required when adding progress",
+        );
+      changes.progress = {
+        unit,
+        start: input.progress.start,
+        end: input.progress.end,
+      };
+    }
+
+    const updated = await this.sessionModel
+      .findOneAndUpdate(
+        owner,
+        { $set: changes },
+        {
+          returnDocument: "after",
+          runValidators: true,
+        },
+      )
+      .exec();
+    if (!updated)
+      throw new NotFoundException("Immersion session does not exist");
+    return updated;
   }
 
   async history(
