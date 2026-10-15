@@ -4,22 +4,22 @@ import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { type Model, Types } from "mongoose";
-import { ImmersionSessionsModule } from "./immersion-session.module.js";
-import { ImmersionSessionService } from "./immersion-session.service.js";
-import { ImmersionSession } from "./schemas/immersion-session.schema.js";
-import type { CreateImmersionSessionDto } from "./dto/create-immersion-session.dto.js";
-import { Content, ContentSchema } from "../content/schemas/content.schema.js";
+import { ImmersionSessionsModule } from "../immersion-session.module.js";
+import { ImmersionSessionService } from "../immersion-session.service.js";
+import { ImmersionSession } from "../schemas/immersion-session.schema.js";
+import type { CreateImmersionSessionDto } from "../dto/create-immersion-session.dto.js";
+import { Content, ContentSchema } from "../../content/schemas/content.schema.js";
 import {
   Language,
   LanguageSchema,
-} from "../language/schemas/language.schema.js";
+} from "../../language/schemas/language.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
 type StoredSession = Omit<ImmersionSession, "content"> & {
   content: Types.ObjectId;
 };
 
-describe("ImmersionSessionService database integration", () => {
+describe("ImmersionSessionService create database integration", () => {
   let module: TestingModule | undefined;
   let service: ImmersionSessionService;
   let sessions: Model<StoredSession>;

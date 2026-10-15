@@ -4,15 +4,15 @@ import { randomUUID } from "node:crypto";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Model, Types } from "mongoose";
-import { ContentModule } from "./content.module.js";
-import { ContentService } from "./content.service.js";
-import { Content } from "./schemas/content.schema.js";
-import { CreateContentDto } from "./dto/create-content.dto.js";
-import type { SearchContentDto } from "./dto/search-content.dto.js";
+import { ContentModule } from "../content.module.js";
+import { ContentService } from "../content.service.js";
+import { Content } from "../schemas/content.schema.js";
+import { CreateContentDto } from "../dto/create-content.dto.js";
+import type { SearchContentDto } from "../dto/search-content.dto.js";
 import {
   Language,
   LanguageSchema,
-} from "../language/schemas/language.schema.js";
+} from "../../language/schemas/language.schema.js";
 
 describe("ContentService database integration", () => {
   let module: TestingModule | undefined;

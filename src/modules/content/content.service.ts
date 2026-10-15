@@ -10,14 +10,8 @@ import type { ContentDocument } from "./schemas/content.schema.js";
 import type { CreateContentDto } from "./dto/create-content.dto.js";
 import type { SearchContentDto } from "./dto/search-content.dto.js";
 import { Language } from "../language/schemas/language.schema.js";
-import { isWithinOneEdit } from "../../utils/is-within-one-edit/is-within-one-edit.js";
-
-export interface ContentSearchResult {
-  items: (Pick<Content, "title" | "type"> & { id: string })[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import { matchesContentTitle } from "../../utils/matches-content-title.js";
+import type { ContentSearchResult } from "./interfaces/content-search.interface.js";
 
 @Injectable()
 export class ContentService {
@@ -44,17 +38,9 @@ export class ContentService {
       .lean<(Pick<Content, "title" | "type"> & { _id: Types.ObjectId })[]>()
       .exec();
 
-    const matches = candidates.filter(({ title }) => {
-      const normalizedTitle = title.toLowerCase();
-      if (normalizedTitle.includes(query)) return true;
-      return (
-        query.length >= 4 &&
-        !/\s/u.test(query) &&
-        normalizedTitle
-          .split(/\s+/u)
-          .some((word) => isWithinOneEdit(query, word))
-      );
-    });
+    const matches = candidates.filter(({ title }) =>
+      matchesContentTitle(title, query),
+    );
     matches.sort(
       (first, second) =>
         first.title

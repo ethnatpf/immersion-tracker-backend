@@ -1,12 +1,20 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, type Types } from "mongoose";
 import { Content } from "../content/schemas/content.schema.js";
 import type { CreateImmersionSessionDto } from "./dto/create-immersion-session.dto.js";
+import type { SessionHistoryDto } from "./dto/session-history.dto.js";
+import { matchesContentTitle } from "../../utils/matches-content-title.js";
+import type { SessionHistoryResult } from "./interfaces/session-history.interface.js";
 import {
   ImmersionSession,
   type ImmersionSessionDocument,
 } from "./schemas/immersion-session.schema.js";
+
+type HistorySession = Pick<ImmersionSession, "created_at" | "duration"> & {
+  _id: Types.ObjectId;
+  content: (Pick<Content, "title" | "type"> & { _id: Types.ObjectId }) | null;
+};
 
 @Injectable()
 export class ImmersionSessionService {
@@ -15,6 +23,65 @@ export class ImmersionSessionService {
     private readonly sessionModel: Model<ImmersionSession>,
     @InjectModel(Content.name) private readonly contentModel: Model<Content>,
   ) {}
+
+  async history(
+    input: SessionHistoryDto,
+    userId: string,
+  ): Promise<SessionHistoryResult> {
+    const { page = 1, limit = 20 } = input;
+    const query = input.q?.trim().toLowerCase() ?? "";
+    const dateRange = {
+      ...(input.start_date !== undefined
+        ? { $gte: new Date(`${input.start_date}T00:00:00.000Z`) }
+        : {}),
+      ...(input.end_date !== undefined
+        ? { $lte: new Date(`${input.end_date}T00:00:00.000Z`) }
+        : {}),
+    };
+    const candidates = await this.sessionModel
+      .find({
+        user_id: userId,
+        ...(Object.keys(dateRange).length ? { created_at: dateRange } : {}),
+      })
+      .select({ content: 1, created_at: 1, duration: 1 })
+      .sort({ created_at: -1, _id: -1 })
+      .populate({
+        path: "content",
+        select: { title: 1, type: 1 },
+        match: {
+          user_id: userId,
+          ...(input.type !== undefined ? { type: input.type } : {}),
+        },
+      })
+      .lean<HistorySession[]>()
+      .exec();
+
+    // Match before pagination so totals and pages include only eligible sessions.
+    const matches = candidates.filter(
+      (
+        session,
+      ): session is HistorySession & {
+        content: NonNullable<HistorySession["content"]>;
+      } =>
+        session.content !== null &&
+        matchesContentTitle(session.content.title, query),
+    );
+    return {
+      items: matches
+        .slice((page - 1) * limit, page * limit)
+        .map(({ _id, content, created_at, duration }) => ({
+          id: _id.toHexString(),
+          content_id: content._id.toHexString(),
+          title: content.title,
+          type: content.type,
+          created_at: created_at.toISOString(),
+          duration,
+        })),
+      total: matches.length,
+      page,
+      limit,
+    };
+  }
 
   async create(
     input: CreateImmersionSessionDto,
