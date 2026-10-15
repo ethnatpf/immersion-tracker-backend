@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, type Types } from "mongoose";
 import { Content } from "../content/schemas/content.schema.js";
@@ -23,6 +27,14 @@ export class ImmersionSessionService {
     private readonly sessionModel: Model<ImmersionSession>,
     @InjectModel(Content.name) private readonly contentModel: Model<Content>,
   ) {}
+
+  async remove(id: string, userId: string): Promise<void> {
+    const result = await this.sessionModel
+      .deleteOne({ _id: id, user_id: userId })
+      .exec();
+    if (result.deletedCount === 0)
+      throw new NotFoundException("Immersion session does not exist");
+  }
 
   async history(
     input: SessionHistoryDto,
