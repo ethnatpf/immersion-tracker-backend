@@ -1,6 +1,9 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
+import { Mongoose } from "mongoose";
+import { Timer, TimerSchema } from "~/modules/timer/schemas/timer.schema.js";
+import { TimerService } from "~/modules/timer/timer.service.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { createTestApp } from "../helpers/create-test-app.js";
 
@@ -62,6 +65,26 @@ describe("POST /timer/start", () => {
     }).expect(201);
     expect(response.body.user_id).toBe(fixture.userId);
     expect(response.body.started_at).toBe(now);
+  });
+
+  it("omits the stored document version from the timer response", async () => {
+    const model = new Mongoose().model(Timer.name, TimerSchema);
+    const timer = new model({ content, user_id: fixture.userId, __v: 0 });
+    const start = vi
+      .spyOn(app.get(TimerService), "start")
+      .mockResolvedValueOnce(timer);
+    try {
+      const response = await post({ content }).expect(201);
+      expect(response.body).toMatchObject({
+        content,
+        user_id: fixture.userId,
+        started_at: now,
+      });
+      expect(response.body).not.toHaveProperty("__v");
+      expect(timer.__v).toBe(0);
+    } finally {
+      start.mockRestore();
+    }
   });
 
   it("requires content", async () => {

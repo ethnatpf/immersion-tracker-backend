@@ -13,6 +13,7 @@ import {
 } from "../immersion-session/schemas/immersion-session.schema.js";
 import type { StartTimerDto } from "./dto/start-timer.dto.js";
 import { Timer, type TimerDocument } from "./schemas/timer.schema.js";
+import type { CurrentTimerResponseDto } from "./dto/timer-response.dto.js";
 
 @Injectable()
 export class TimerService {
@@ -23,7 +24,7 @@ export class TimerService {
     private readonly sessionModel: Model<ImmersionSession>,
   ) {}
 
-  async getCurrent(userId: string) {
+  async getCurrent(userId: string): Promise<CurrentTimerResponseDto> {
     const timer = await this.timerModel
       .findOne({ user_id: userId })
       .select({ content: 1, started_at: 1 })

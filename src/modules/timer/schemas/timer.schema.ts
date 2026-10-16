@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes } from "mongoose";
 import { Content } from "~/modules/content/schemas/content.schema.js";
 
-@Schema()
+@Schema({ toJSON: { versionKey: false } })
 export class Timer {
   @Prop({ required: true })
   user_id: string;

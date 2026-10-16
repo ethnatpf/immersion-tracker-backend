@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Language } from "./schemas/language.schema.js";
+import type { LanguageResponseDto } from "./dto/language-response.dto.js";
 
 @Injectable()
 export class LanguageService {
@@ -9,9 +10,7 @@ export class LanguageService {
     @InjectModel(Language.name) private readonly languageModel: Model<Language>,
   ) {}
 
-  async findAll(): Promise<
-    (Pick<Language, "code" | "name"> & { id: string })[]
-  > {
+  async findAll(): Promise<LanguageResponseDto[]> {
     const languages = await this.languageModel
       .find({})
       .select({ _id: 1, code: 1, name: 1 })

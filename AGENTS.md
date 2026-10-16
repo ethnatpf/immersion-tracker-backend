@@ -8,6 +8,9 @@
   database definitions in schemas.
 - The project uses ESM with NodeNext resolution. Use `.js` extensions in local
   TypeScript imports, following existing code. `~/*` maps to `src/*`.
+- Document every endpoint's response with DTO classes and Swagger response
+  decorators; use a no-content decorator for responses without a body.
+- Never expose Mongoose's `__v` in API responses or response DTOs.
 - Preserve existing user changes and keep work focused on the requested behavior.
   Do not expand unfinished features merely because a service or controller stub
   exists.
