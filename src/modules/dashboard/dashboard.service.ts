@@ -9,9 +9,9 @@ import type {
   DashboardStatisticsDto,
 } from "./dto/dashboard-statistics.dto.js";
 import type {
-  DashboardBucket,
-  DashboardStatistics,
-} from "./interfaces/dashboard-statistics.interface.js";
+  DashboardBucketResponseDto,
+  DashboardStatisticsResponseDto,
+} from "./dto/dashboard-statistics-response.dto.js";
 
 type DailyTotals = {
   _id: Date;
@@ -77,7 +77,7 @@ export class DashboardService {
   async statistics(
     input: DashboardStatisticsDto,
     userId: string,
-  ): Promise<DashboardStatistics> {
+  ): Promise<DashboardStatisticsResponseDto> {
     const today = dayjs.utc().startOf("day");
     const tomorrow = today.add(1, "day");
     const start = rangeStart(input.range, today);
@@ -135,7 +135,7 @@ export class DashboardService {
       ])
       .exec();
 
-    const result: DashboardStatistics = {
+    const result: DashboardStatisticsResponseDto = {
       total_immersion_time: 0,
       current_streak: 0,
       reading_time: 0,
@@ -152,7 +152,7 @@ export class DashboardService {
     if (input.range === "month")
       chartEnd = today.startOf("month").add(1, "month");
 
-    const buckets = new Map<string, DashboardBucket>();
+    const buckets = new Map<string, DashboardBucketResponseDto>();
 
     for (
       let date = bucketStart(input.range, averageStart, averageStart);
