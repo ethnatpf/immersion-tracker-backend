@@ -22,8 +22,9 @@ import { Timer } from "../schemas/timer.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
 type StoredTimer = Omit<Timer, "content"> & { content: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("TimerService stop database integration", () => {
@@ -123,6 +124,48 @@ describe("TimerService stop database integration", () => {
     });
   }
 
+  it("copies current content metadata when stopping a running timer", async () => {
+    await seedTimer();
+    const changedLanguage = new Types.ObjectId();
+    await contents.updateOne(
+      { _id: contentId },
+      { $set: { language: changedLanguage } },
+    );
+    try {
+      const created = await service.stop(userId);
+      expect(await sessions.findById(created._id).lean().exec()).toMatchObject({
+        language: changedLanguage,
+        content_type: "book",
+      });
+    } finally {
+      await contents.updateOne(
+        { _id: contentId },
+        { $set: { language: languageId } },
+      );
+    }
+  });
+
+  it.each(["missing", "inaccessible"])(
+    "preserves the timer when content is %s",
+    async (kind) => {
+      const timer = await seedTimer();
+      await timers.updateOne(
+        { _id: timer._id },
+        {
+          $set: {
+            content: kind === "missing" ? new Types.ObjectId() : otherContentId,
+          },
+        },
+      );
+      const before = await timers.findById(timer._id).lean().exec();
+      await expect(service.stop(userId)).rejects.toThrow(
+        "Content does not exist",
+      );
+      expect(await timers.findById(timer._id).lean().exec()).toEqual(before);
+      expect(await sessions.countDocuments(owners)).toBe(0);
+    },
+  );
+
   it("deletes the active timer and persists a session with its content, owner, and elapsed seconds", async () => {
     const timer = await seedTimer();
     const contentBefore = await contents.findById(contentId).lean().exec();
@@ -164,6 +207,8 @@ describe("TimerService stop database integration", () => {
     const other = await seedTimer(otherUserId);
     const otherBefore = await timers.findById(other._id).lean().exec();
     const existing = await sessions.create({
+      language: languageId,
+      content_type: "book",
       user_id: userId,
       content: contentId,
       duration: 60,

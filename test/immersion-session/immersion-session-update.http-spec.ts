@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { NotFoundException, type INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { Mongoose } from "mongoose";
+import { getModelToken } from "@nestjs/mongoose";
 import { ImmersionSessionService } from "../../src/modules/immersion-session/immersion-session.service.js";
 import {
   ImmersionSession,
@@ -25,6 +26,8 @@ describe("PATCH /immersion-session/:id", () => {
     content: "507f1f77bcf86cd799439012",
     user_id: "auth0|test-user",
     created_at: "2024-02-29T00:00:00.000Z",
+    language: "507f1f77bcf86cd799439099",
+    content_type: "book",
     duration: 1200,
     progress: { unit: "episode", start: 1, end: 3 },
   };
@@ -56,6 +59,34 @@ describe("PATCH /immersion-session/:id", () => {
       .patch(`/immersion-session/${id}`)
       .set("Authorization", `Bearer ${token}`);
   }
+
+  it("preserves server-managed metadata when supplied in an update", async () => {
+    const model = app.get(getModelToken(ImmersionSession.name));
+    const saved = new sessionModel(result);
+    const persist = vi.fn((_filter, changes) => ({
+      exec: async () => new sessionModel({ ...result, ...changes.$set }),
+    }));
+    model.findOne = () => ({ exec: async () => saved });
+    model.findOneAndUpdate = persist;
+    const service = new ImmersionSessionService(
+      model,
+      app.get(getModelToken("Content")),
+    );
+    update.mockImplementationOnce(service.update.bind(service));
+    const response = await patch()
+      .send({
+        duration: 1800,
+        language: "507f1f77bcf86cd799439098",
+        content_type: "anime",
+      })
+      .expect(200);
+    expect(response.body).toMatchObject({
+      duration: 1800,
+      language: result.language,
+      content_type: result.content_type,
+    });
+    expect(persist.mock.calls[0]?.[1]).toEqual({ $set: { duration: 1800 } });
+  });
 
   it.each([
     { created_at: "2024-02-29" },

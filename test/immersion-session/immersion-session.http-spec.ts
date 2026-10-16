@@ -16,6 +16,7 @@ describe("POST /immersion-session", () => {
   let userId: string;
   let createToken: ReturnType<typeof createAuthFixture>["createToken"];
   const input = { content: "507f1f77bcf86cd799439011", duration: 1200 };
+  const language = "507f1f77bcf86cd799439099";
   const otherContent = "507f1f77bcf86cd799439012";
   const missingContent = "507f1f77bcf86cd799439013";
   const progress = { unit: "episode", start: 1, end: 3 };
@@ -27,8 +28,13 @@ describe("POST /immersion-session", () => {
     token = fixture.createToken();
     app = await createTestApp(fixture.authorization, {
       contents: [
-        { _id: input.content, user_id: userId },
-        { _id: otherContent, user_id: "auth0|other-user" },
+        { _id: input.content, user_id: userId, language, type: "book" },
+        {
+          _id: otherContent,
+          user_id: "auth0|other-user",
+          language: "507f1f77bcf86cd799439099",
+          type: "book",
+        },
       ],
     });
   });
@@ -58,7 +64,12 @@ describe("POST /immersion-session", () => {
     const create = spyOnCreate();
     const response = await post(input).expect(201);
     expect(create).toHaveBeenCalledExactlyOnceWith(input, userId);
-    expect(response.body).toMatchObject({ ...input, user_id: userId });
+    expect(response.body).toMatchObject({
+      ...input,
+      user_id: userId,
+      language,
+      content_type: "book",
+    });
   });
 
   it("omits the stored document version from the created session response", async () => {
@@ -66,7 +77,13 @@ describe("POST /immersion-session", () => {
       ImmersionSession.name,
       ImmersionSessionSchema,
     );
-    const session = new model({ ...input, user_id: userId, __v: 0 });
+    const session = new model({
+      ...input,
+      user_id: userId,
+      language,
+      content_type: "book",
+      __v: 0,
+    });
     spyOnCreate().mockResolvedValueOnce(session);
 
     const response = await post(input).expect(201);
@@ -74,6 +91,15 @@ describe("POST /immersion-session", () => {
     expect(response.body).toMatchObject({ ...input, user_id: userId });
     expect(response.body).not.toHaveProperty("__v");
     expect(session.__v).toBe(0);
+  });
+
+  it("derives language and content type from content despite supplied metadata", async () => {
+    const response = await post({
+      ...input,
+      language: otherContent,
+      content_type: "anime",
+    }).expect(201);
+    expect(response.body).toMatchObject({ language, content_type: "book" });
   });
 
   it("ignores a body-supplied owner", async () => {

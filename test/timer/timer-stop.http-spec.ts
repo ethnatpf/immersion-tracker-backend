@@ -11,6 +11,8 @@ describe("POST /timer/stop", () => {
   const session = {
     _id: "507f1f77bcf86cd799439015",
     content: "507f1f77bcf86cd799439011",
+    language: "507f1f77bcf86cd799439099",
+    content_type: "book",
     duration: 1200,
     user_id: "auth0|test-user",
     created_at: "2026-10-15T00:00:00.000Z",

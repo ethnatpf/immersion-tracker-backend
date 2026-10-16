@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import dayjs, { type Dayjs } from "dayjs";
-import { Content } from "../content/schemas/content.schema.js";
 import { ImmersionSession } from "../immersion-session/schemas/immersion-session.schema.js";
 import type {
   DashboardRange,
@@ -71,7 +70,6 @@ export class DashboardService {
   constructor(
     @InjectModel(ImmersionSession.name)
     private readonly sessionModel: Model<ImmersionSession>,
-    @InjectModel(Content.name) private readonly contentModel: Model<Content>,
   ) {}
 
   async statistics(
@@ -87,25 +85,13 @@ export class DashboardService {
         {
           $match: {
             user_id: userId,
+            language: new Types.ObjectId(input.language),
             created_at: {
               ...(start ? { $gte: start.toDate() } : {}),
               $lt: tomorrow.toDate(),
             },
           },
         },
-        {
-          $lookup: {
-            from: this.contentModel.collection.name,
-            localField: "content",
-            foreignField: "_id",
-            pipeline: [
-              { $match: { language: new Types.ObjectId(input.language) } },
-              { $project: { type: 1 } },
-            ],
-            as: "content",
-          },
-        },
-        { $unwind: "$content" },
         {
           $group: {
             _id: {
@@ -114,7 +100,7 @@ export class DashboardService {
             reading_time: {
               $sum: {
                 $cond: [
-                  { $in: ["$content.type", ["book", "manga"]] },
+                  { $in: ["$content_type", ["book", "manga"]] },
                   "$duration",
                   0,
                 ],
@@ -123,7 +109,7 @@ export class DashboardService {
             audiovisual_time: {
               $sum: {
                 $cond: [
-                  { $in: ["$content.type", ["anime", "drama", "video"]] },
+                  { $in: ["$content_type", ["anime", "drama", "video"]] },
                   "$duration",
                   0,
                 ],

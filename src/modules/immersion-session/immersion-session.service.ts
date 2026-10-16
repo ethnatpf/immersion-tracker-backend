@@ -146,12 +146,15 @@ export class ImmersionSessionService {
     userId: string,
   ): Promise<ImmersionSessionDocument> {
     const content = await this.contentModel
-      .exists({ _id: input.content, user_id: userId })
+      .findOne({ _id: input.content, user_id: userId })
+      .select({ language: 1, type: 1 })
       .exec();
     if (!content) throw new BadRequestException("Content does not exist");
 
     return new this.sessionModel({
       content: input.content,
+      language: content.language,
+      content_type: content.type,
       duration: input.duration,
       user_id: userId,
       created_at:

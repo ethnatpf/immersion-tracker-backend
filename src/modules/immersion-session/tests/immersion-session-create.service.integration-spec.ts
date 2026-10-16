@@ -8,15 +8,19 @@ import { ImmersionSessionsModule } from "../immersion-session.module.js";
 import { ImmersionSessionService } from "../immersion-session.service.js";
 import { ImmersionSession } from "../schemas/immersion-session.schema.js";
 import type { CreateImmersionSessionDto } from "../dto/create-immersion-session.dto.js";
-import { Content, ContentSchema } from "../../content/schemas/content.schema.js";
+import {
+  Content,
+  ContentSchema,
+} from "../../content/schemas/content.schema.js";
 import {
   Language,
   LanguageSchema,
 } from "../../language/schemas/language.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("ImmersionSessionService create database integration", () => {
@@ -98,6 +102,27 @@ describe("ImmersionSessionService create database integration", () => {
       await module?.close();
     }
   });
+
+  it.each(["anime", "book", "manga", "drama", "video"] as const)(
+    "copies language and %s type from owned content",
+    async (type) => {
+      const entry = await contents.create({
+        title: randomUUID(),
+        type,
+        language: languageId,
+        user_id: userId,
+        completed: false,
+      });
+      const created = await service.create(
+        { ...input, content: entry._id.toHexString() },
+        userId,
+      );
+      expect(await sessions.findById(created._id).lean().exec()).toMatchObject({
+        language: new Types.ObjectId(languageId),
+        content_type: type,
+      });
+    },
+  );
 
   it("persists a session with its content, duration, and external owner", async () => {
     const created = await service.create(input, userId);

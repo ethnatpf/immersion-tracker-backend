@@ -18,6 +18,12 @@ export class ImmersionSessionResponseDto {
   @ApiProperty({ description: "Content ID" })
   content: string;
 
+  @ApiProperty({ description: "Language ID" })
+  language: string;
+
+  @ApiProperty({ enum: ["anime", "book", "manga", "drama", "video"] })
+  content_type: "anime" | "book" | "manga" | "drama" | "video";
+
   @ApiProperty({ description: "External authentication provider user ID" })
   user_id: string;
 

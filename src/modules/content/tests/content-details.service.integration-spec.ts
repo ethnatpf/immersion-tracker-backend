@@ -19,8 +19,9 @@ import {
 import type { ContentDetailsResponseDto } from "../dto/content-details-response.dto.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("ContentService getById database integration", () => {
@@ -108,7 +109,10 @@ describe("ContentService getById database integration", () => {
       id?: Types.ObjectId;
     } = {},
   ): Promise<NonNullable<ContentDetailsResponseDto["lastImmersionSession"]>> {
+    const entry = await contents.findById(content).orFail().exec();
     const stored = await sessions.create({
+      language: entry.language,
+      content_type: entry.type,
       _id: options.id ?? new Types.ObjectId(),
       content,
       created_at: new Date(`${date}T00:00:00.000Z`),

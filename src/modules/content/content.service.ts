@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, mongo, type Types } from "mongoose";
+import { Model, mongo, type Types, type ClientSession } from "mongoose";
 import { Content } from "./schemas/content.schema.js";
 import type { ContentDocument } from "./schemas/content.schema.js";
 import type { CreateContentDto } from "./dto/create-content.dto.js";
@@ -136,15 +136,35 @@ export class ContentService {
     if (input.language !== undefined) changes.language = input.language;
 
     try {
-      const content = await this.contentModel
-        .findOneAndUpdate(
-          { _id: id, user_id: userId },
-          { $set: changes },
-          { returnDocument: "after", runValidators: true },
-        )
-        .exec();
-      if (!content) throw new NotFoundException("Content not found");
-      return content;
+      const update = async (session?: ClientSession) => {
+        const content = await this.contentModel
+          .findOneAndUpdate(
+            { _id: id, user_id: userId },
+            { $set: changes },
+            {
+              returnDocument: "after",
+              runValidators: true,
+              ...(session ? { session } : {}),
+            },
+          )
+          .exec();
+        if (!content) throw new NotFoundException("Content not found");
+        if (input.language !== undefined) {
+          await this.immersionSessionModel
+            .updateMany(
+              { user_id: userId },
+              { $set: { language: content.language } },
+              { session, runValidators: true },
+            )
+            .where("content")
+            .equals(content._id)
+            .exec();
+        }
+        return content;
+      };
+      return input.language === undefined
+        ? await update()
+        : await this.contentModel.db.transaction(update);
     } catch (error) {
       if (error instanceof mongo.MongoServerError && error.code === 11000) {
         throw new ConflictException(

@@ -34,7 +34,12 @@ class ModelStub {
 export async function createTestApp(
   authorization: AuthOptions,
   options: {
-    contents?: { _id: string; user_id: string }[];
+    contents?: {
+      _id: string;
+      user_id: string;
+      language: string;
+      type: string;
+    }[];
     languageIds?: string[];
     languages?: {
       _id: Types.ObjectId;
@@ -50,6 +55,22 @@ export async function createTestApp(
 
   class ContentModelStub extends ModelStub {
     static collection = { name: "contents" };
+
+    static findOne(query: { _id: string; user_id: string }) {
+      return {
+        select: () => ({
+          exec: async () => {
+            const content = options.contents?.find(
+              (entry) =>
+                entry._id.toLowerCase() ===
+                  query._id.toString().toLowerCase() &&
+                entry.user_id === query.user_id,
+            );
+            return content ?? null;
+          },
+        }),
+      };
+    }
 
     static exists(query: { _id: string; user_id: string }) {
       return {

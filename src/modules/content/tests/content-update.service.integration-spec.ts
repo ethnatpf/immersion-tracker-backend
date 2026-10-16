@@ -16,12 +16,21 @@ import {
   LanguageSchema,
 } from "../../language/schemas/language.schema.js";
 
+import { ImmersionSession } from "../../immersion-session/schemas/immersion-session.schema.js";
+import { DashboardModule } from "../../dashboard/dashboard.module.js";
+import { DashboardService } from "../../dashboard/dashboard.service.js";
+import { UserModule } from "../../user/user.module.js";
+import { UserService } from "../../user/user.service.js";
+
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
 
 describe("ContentService update database integration", () => {
   let module: TestingModule | undefined;
   let service: ContentService;
   let contents: Model<StoredContent>;
+  let sessions: Model<
+    Omit<ImmersionSession, "content"> & { content: Types.ObjectId }
+  >;
   let languages: Model<Language>;
   let languageId: Types.ObjectId;
   let otherLanguageId: Types.ObjectId;
@@ -45,12 +54,15 @@ describe("ContentService update database integration", () => {
           { name: Language.name, schema: LanguageSchema },
         ]),
         ContentModule,
+        DashboardModule,
+        UserModule,
       ],
     }).compile();
     service = module.get(ContentService);
     contents = module.get<Model<StoredContent>>(getModelToken(Content.name));
     languages = module.get<Model<Language>>(getModelToken(Language.name));
-    await contents.init();
+    sessions = module.get(getModelToken(ImmersionSession.name));
+    await Promise.all([contents.init(), sessions.init()]);
     for (const name of ["Original language", "Updated language"]) {
       const language = await languages.create({
         code: `test-${randomUUID()}`,
@@ -65,11 +77,15 @@ describe("ContentService update database integration", () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
+    if (sessions) await sessions.deleteMany(owners);
     if (contents) await contents.deleteMany(owners);
   });
 
   afterAll(async () => {
     try {
+      vi.restoreAllMocks();
+      if (sessions) await sessions.deleteMany(owners);
       if (contents) await contents.deleteMany(owners);
       if (languages && languageIds.length)
         await languages.deleteMany({ _id: { $in: languageIds } });
@@ -93,6 +109,120 @@ describe("ContentService update database integration", () => {
       url: "https://example.com/content",
     });
   }
+
+  async function seedSession(
+    entry: { _id: Types.ObjectId; type: Content["type"] },
+    owner = userId,
+  ) {
+    return sessions.create({
+      content: entry._id,
+      language: languageId,
+      content_type: entry.type,
+      user_id: owner,
+      duration: 60,
+      created_at: new Date("2020-01-01T00:00:00.000Z"),
+    });
+  }
+
+  it("synchronizes only owned sessions for edited content and moves statistics", async () => {
+    const target = await seedContent();
+    const first = await seedSession(target);
+    const second = await seedSession(target);
+    const unrelated = await seedSession(await seedContent("Unrelated"));
+    const foreign = await seedSession(target, otherUserId);
+    const unchanged = await sessions
+      .find({ _id: { $in: [unrelated._id, foreign._id] } })
+      .lean()
+      .exec();
+    await service.update(
+      target._id.toHexString(),
+      { language: otherLanguageId.toHexString() },
+      userId,
+    );
+    for (const id of [first._id, second._id]) {
+      expect(await sessions.findById(id).lean().exec()).toMatchObject({
+        language: otherLanguageId,
+        content_type: "book",
+        duration: 60,
+      });
+    }
+    expect(
+      await sessions
+        .find({ _id: { $in: [unrelated._id, foreign._id] } })
+        .lean()
+        .exec(),
+    ).toEqual(unchanged);
+    expect(await module!.get(UserService).preferences(userId)).toEqual({
+      preferred_language: otherLanguageId.toHexString(),
+    });
+    for (const [language, total] of [
+      [languageId, 60],
+      [otherLanguageId, 120],
+    ] as const) {
+      expect(
+        await module!
+          .get(DashboardService)
+          .statistics(
+            { range: "total", language: language.toHexString() },
+            userId,
+          ),
+      ).toMatchObject({ total_immersion_time: total });
+    }
+  });
+
+  it("rolls back content and session language when synchronization fails after writing", async () => {
+    const target = await seedContent();
+    await seedSession(target);
+    const before = await sessions.find(owners).lean().exec();
+    const updateMany = sessions.collection.updateMany.bind(sessions.collection);
+    vi.spyOn(sessions.collection, "updateMany").mockImplementation(
+      async (...args) => {
+        await updateMany(...args);
+        throw new Error("Injected synchronization failure");
+      },
+    );
+    await expect(
+      service.update(
+        target._id.toHexString(),
+        { language: otherLanguageId.toHexString() },
+        userId,
+      ),
+    ).rejects.toThrow("Injected synchronization failure");
+    expect(
+      (await contents.findById(target._id).lean().exec())?.language,
+    ).toEqual(languageId);
+    expect(await sessions.find(owners).lean().exec()).toEqual(before);
+  });
+
+  it.each([
+    "invalid language",
+    "inaccessible",
+    "duplicate title",
+    "ordinary edit",
+  ])("preserves session metadata for %s", async (kind) => {
+    const target = await seedContent();
+    await seedSession(target);
+    await seedContent("Existing title");
+    const before = await sessions.find(owners).lean().exec();
+    const input =
+      kind === "ordinary edit"
+        ? { title: "New title", completed: true }
+        : {
+            language:
+              kind === "invalid language"
+                ? new Types.ObjectId().toHexString()
+                : otherLanguageId.toHexString(),
+            ...(kind === "duplicate title" ? { title: "Existing title" } : {}),
+          };
+    const result = service.update(
+      target._id.toHexString(),
+      input,
+      kind === "inaccessible" ? otherUserId : userId,
+    );
+    if (kind === "ordinary edit") await result;
+    else await expect(result).rejects.toThrow();
+    expect(await sessions.find(owners).lean().exec()).toEqual(before);
+  });
 
   it.each([
     { title: "Updated title" },

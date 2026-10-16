@@ -17,8 +17,9 @@ import {
 } from "../../language/schemas/language.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("ImmersionSessionService delete database integration", () => {
@@ -99,6 +100,8 @@ describe("ImmersionSessionService delete database integration", () => {
 
   function seedSession(owner = userId) {
     return sessions.create({
+      language: languageId,
+      content_type: "book",
       content: owner === otherUserId ? otherContentId : contentId,
       duration: 1200,
       user_id: owner,

@@ -18,8 +18,9 @@ import type { SessionHistoryItemResponseDto } from "../dto/session-history-respo
 import type { SessionHistoryDto } from "../dto/session-history.dto.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("ImmersionSessionService history database integration", () => {
@@ -108,6 +109,8 @@ describe("ImmersionSessionService history database integration", () => {
     const stored = await sessions.create({
       _id: id,
       content: entry._id,
+      language: languageId,
+      content_type: entry.type,
       user_id: owner,
       created_at: new Date(`${date}T00:00:00.000Z`),
       duration,

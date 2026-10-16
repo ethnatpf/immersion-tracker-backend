@@ -19,8 +19,9 @@ import {
 } from "../../language/schemas/language.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("UserService preferences database integration", () => {
@@ -101,18 +102,48 @@ describe("UserService preferences database integration", () => {
   }
 
   function session(
-    entry: { _id: Types.ObjectId },
+    entry: {
+      _id: Types.ObjectId;
+      language: Types.ObjectId;
+      type: Content["type"];
+    },
     duration = 60,
     owner = userId,
     created_at = new Date("2026-10-15T00:00:00.000Z"),
   ) {
     return sessions.create({
       content: entry._id,
+      language: entry.language,
+      content_type: entry.type,
       user_id: owner,
       duration,
       created_at,
     });
   }
+
+  it("uses the session language instead of referenced content metadata", async () => {
+    const entry = await content(otherLanguageId);
+    await sessions.create({
+      content: entry._id,
+      language: languageId,
+      content_type: "book",
+      user_id: userId,
+      duration: 60,
+    });
+    expect(await preferences()).toEqual({
+      preferred_language: languageId.toHexString(),
+    });
+  });
+
+  it("breaks equal session counts by ascending language ID", async () => {
+    await session(await content(languageId));
+    await session(await content(otherLanguageId));
+    const first = [
+      languageId.toHexString(),
+      otherLanguageId.toHexString(),
+    ].sort()[0];
+    expect(await preferences()).toEqual({ preferred_language: first });
+  });
 
   it("returns null when there are no sessions, even if the user has content", async () => {
     await content();

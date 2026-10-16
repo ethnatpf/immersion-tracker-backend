@@ -33,8 +33,9 @@ type Statistics = {
   }[];
 };
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 // Query and calculation latency only; seed writes and index setup are excluded.
@@ -154,6 +155,8 @@ describe("DashboardService statistics performance", () => {
       const records = Array.from({ length: 5000 }, (_, index) => ({
         user_id: userId,
         content: index % 2 === 0 ? book._id : anime._id,
+        language: languageId,
+        content_type: index % 2 === 0 ? book.type : anime.type,
         duration: 60,
         created_at: new Date(Date.UTC(2026, 9, 15 - Math.floor(index / 5))),
       }));

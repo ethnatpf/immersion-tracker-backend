@@ -28,9 +28,24 @@ describe("POST /timer/start", () => {
     token = fixture.createToken();
     app = await createTestApp(fixture.authorization, {
       contents: [
-        { _id: content, user_id: fixture.userId },
-        { _id: secondContent, user_id: fixture.userId },
-        { _id: otherContent, user_id: otherUserId },
+        {
+          _id: content,
+          user_id: fixture.userId,
+          language: "507f1f77bcf86cd799439099",
+          type: "book",
+        },
+        {
+          _id: secondContent,
+          user_id: fixture.userId,
+          language: "507f1f77bcf86cd799439099",
+          type: "book",
+        },
+        {
+          _id: otherContent,
+          user_id: otherUserId,
+          language: "507f1f77bcf86cd799439099",
+          type: "book",
+        },
       ],
     });
   });

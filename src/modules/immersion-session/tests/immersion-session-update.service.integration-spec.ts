@@ -17,8 +17,9 @@ import {
 } from "../../language/schemas/language.schema.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 describe("ImmersionSessionService update database integration", () => {
@@ -99,6 +100,8 @@ describe("ImmersionSessionService update database integration", () => {
 
   function seedSession(owner = userId) {
     return sessions.create({
+      language: languageId,
+      content_type: "book",
       content: owner === otherUserId ? otherContentId : contentId,
       duration: 1200,
       created_at: new Date("2024-02-28T00:00:00.000Z"),
@@ -174,6 +177,8 @@ describe("ImmersionSessionService update database integration", () => {
       "persists both bounds and preserves the unit and other fields: %j",
       async (progress) => {
         const target = await sessions.create({
+          language: languageId,
+          content_type: "book",
           content: contentId,
           user_id: userId,
           duration: 1200,
@@ -217,6 +222,8 @@ describe("ImmersionSessionService update database integration", () => {
 
   it("leaves omitted progress absent when updating a session without progress", async () => {
     const target = await sessions.create({
+      language: languageId,
+      content_type: "book",
       content: contentId,
       user_id: userId,
       duration: 1200,
@@ -270,6 +277,8 @@ describe("ImmersionSessionService update database integration", () => {
 
   it("rejects setting progress bounds without an existing unit and saves none of the changes", async () => {
     const target = await sessions.create({
+      language: languageId,
+      content_type: "book",
       content: contentId,
       user_id: userId,
       duration: 1200,
@@ -295,6 +304,8 @@ describe("ImmersionSessionService update database integration", () => {
     "adds %s progress to a session without prior progress",
     async (unit) => {
       const target = await sessions.create({
+        language: languageId,
+        content_type: "book",
         content: contentId,
         user_id: userId,
         duration: 1200,
@@ -323,6 +334,8 @@ describe("ImmersionSessionService update database integration", () => {
       duration: 1800,
       user_id: otherUserId,
       content: otherContentId.toHexString(),
+      language: new Types.ObjectId().toHexString(),
+      content_type: "anime",
     };
 
     await service.update(target._id.toHexString(), input, userId);
@@ -331,6 +344,8 @@ describe("ImmersionSessionService update database integration", () => {
     expect(stored?.duration).toBe(1800);
     expect(stored?.user_id).toBe(userId);
     expect(stored?.content).toEqual(contentId);
+    expect(stored?.language).toEqual(languageId);
+    expect(stored?.content_type).toBe("book");
   });
 });
 

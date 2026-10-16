@@ -32,8 +32,9 @@ type Statistics = {
   }[];
 };
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
-type StoredSession = Omit<ImmersionSession, "content"> & {
+type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   content: Types.ObjectId;
+  language: Types.ObjectId;
 };
 
 // Seconds throughout; UTC dates; weeks start on Monday.
@@ -143,13 +144,19 @@ describe("DashboardService statistics database integration", () => {
   }
 
   async function session(
-    entry: { _id: Types.ObjectId },
+    entry: {
+      _id: Types.ObjectId;
+      language: Types.ObjectId;
+      type: Content["type"];
+    },
     date: string,
     duration = 60,
     owner = userId,
   ) {
     return sessions.create({
       content: entry._id,
+      language: entry.language,
+      content_type: entry.type,
       user_id: owner,
       created_at: new Date(`${date}T00:00:00.000Z`),
       duration,
@@ -159,6 +166,22 @@ describe("DashboardService statistics database integration", () => {
   function bucket(start_date: string, reading_time = 0, audiovisual_time = 0) {
     return { start_date, reading_time, audiovisual_time };
   }
+
+  it("uses session language and type instead of referenced content metadata", async () => {
+    const entry = await content("anime", otherLanguageId);
+    await sessions.create({
+      content: entry._id,
+      language: languageId,
+      content_type: "book",
+      user_id: userId,
+      duration: 120,
+      created_at: new Date("2026-10-15T00:00:00.000Z"),
+    });
+    expect(await statistics()).toMatchObject({
+      reading_time: 120,
+      audiovisual_time: 0,
+    });
+  });
 
   it("returns zeros and no yearly buckets when there has never been immersion", async () => {
     expect(await statistics()).toEqual({

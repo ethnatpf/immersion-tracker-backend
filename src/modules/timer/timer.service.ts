@@ -57,8 +57,17 @@ export class TimerService {
         .exec();
       if (!timer) throw new NotFoundException("No active timer");
 
+      const content = await this.contentModel
+        .findOne({ _id: timer.content, user_id: userId })
+        .select({ language: 1, type: 1 })
+        .session(session)
+        .exec();
+      if (!content) throw new BadRequestException("Content does not exist");
+
       return new this.sessionModel({
         content: timer.content,
+        language: content.language,
+        content_type: content.type,
         user_id: userId,
         duration: Math.floor((Date.now() - timer.started_at.getTime()) / 1000),
       }).save({ session });
