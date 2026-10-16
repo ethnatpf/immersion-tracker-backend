@@ -1,4 +1,21 @@
 services:
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    secrets:
+      - metrics_token
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   mongodb:
     image: mongo:9.0.2
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
@@ -25,3 +42,8 @@ services:
 
 volumes:
   mongodb_data:
+  prometheus_data:
+
+secrets:
+  metrics_token:
+    environment: METRICS_TOKEN

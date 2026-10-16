@@ -11,13 +11,15 @@ bun install
 cp .env.template .env
 ```
 
-Update `.env` with your MongoDB and Auth0 configuration.
+Update `.env` with your MongoDB and Auth0 configuration, and set `METRICS_TOKEN`
+to a nonempty random token. The API and Prometheus use this same token to
+authenticate metrics scrapes.
 
 Start the development containers from the `containers` folder before running the API:
 
 ```bash
 cd containers
-docker compose up -d --wait
+docker compose --env-file ../.env up -d --wait
 cd ..
 ```
 
@@ -57,6 +59,17 @@ npm run test:performance
 This command loads `.env` and requires the same dedicated `MONGODB_TEST_URL`.
 Performance tests use `*.performance-spec.ts` files and are excluded from the
 regular suites and `test:all`.
+
+## Prometheus
+
+Prometheus is available at [localhost:9090](http://localhost:9090). It scrapes the
+API's `/metrics` endpoint every 15 seconds using `METRICS_TOKEN` mounted as a Compose
+secret.
+
+The scrape target in `containers/prometheus.yaml` assumes the API runs on the host
+on port 3000. Update that target if you change the API port. Once the API is running,
+check [Prometheus targets](http://localhost:9090/targets) for the
+`immersion-tracker-api` job to be UP. It will be DOWN until the API starts.
 
 ## Notes
 
