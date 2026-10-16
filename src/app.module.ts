@@ -5,6 +5,7 @@ import { ConfigModule } from "@nestjs/config";
 import { LanguageModule } from "./modules/language/language.module.js";
 import { ContentModule } from "./modules/content/content.module.js";
 import { TimerModule } from "./modules/timer/timer.module.js";
+import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TimerModule } from "./modules/timer/timer.module.js";
     LanguageModule,
     ContentModule,
     TimerModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

@@ -19,7 +19,8 @@
     "test:all": "vitest run && npm run test:http && npm run test:integration",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:http": "vitest run --config ./vitest.config.http.ts",
-    "test:integration": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run --config ./vitest.config.integration.ts"
+    "test:integration": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run --config ./vitest.config.integration.ts",
+    "test:performance": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run --config ./vitest.config.performance.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -28,6 +29,7 @@
     "@nestjs/platform-express": "^12.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "dayjs": "^1.11.23",
     "express-oauth2-jwt-bearer": "^1.10.0",
     "mongoose": "^9.11.1",
     "reflect-metadata": "^0.2.2",

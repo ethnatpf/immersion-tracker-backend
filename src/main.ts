@@ -2,6 +2,9 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
 import { configureApp } from "./configure-app.js";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { configureDayjs } from "./configure-dayjs.js";
+
+configureDayjs();
 
 async function bootstrap() {
   if (!process.env.MONGODB_URL) {

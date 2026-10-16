@@ -49,6 +49,8 @@ export async function createTestApp(
     .useValue({ close: async () => {} });
 
   class ContentModelStub extends ModelStub {
+    static collection = { name: "contents" };
+
     static exists(query: { _id: string; user_id: string }) {
       return {
         exec: async () =>
@@ -70,6 +72,10 @@ export async function createTestApp(
     ImmersionSessionSchema,
   );
   class SessionModelStub extends ModelStub {
+    static aggregate() {
+      return { exec: async () => [] };
+    }
+
     constructor(values: Record<string, unknown>) {
       super(new sessionModel(values).toObject<Record<string, unknown>>());
     }

@@ -48,9 +48,20 @@ HTTP tests use stubbed MongoDB providers. Database integration tests require the
 MongoDB container to be running and `MONGODB_TEST_URL` in `.env` to point to a
 dedicated test database, separate from development or production data.
 
-Stopping a timer uses a MongoDB transaction to create the immersion session and
-delete the timer together. MongoDB must run as a replica set or sharded cluster;
+Run database performance tests separately:
+
+```bash
+npm run test:performance
+```
+
+This command loads `.env` and requires the same dedicated `MONGODB_TEST_URL`.
+Performance tests use `*.performance-spec.ts` files and are excluded from the
+regular suites and `test:all`.
+
+## Notes
+
+### MongoDB
+
+MongoDB must run as a replica set or sharded cluster to support transactions;
 a standalone server cannot support this operation. The development Compose setup
-initializes a single-node replica set automatically. If the container is already
-running, rerun `docker compose up -d --wait` from `containers` to apply this setup
-while preserving its data volume.
+initializes a single-node replica set automatically.

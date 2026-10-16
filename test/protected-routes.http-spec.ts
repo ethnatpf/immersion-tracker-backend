@@ -9,6 +9,10 @@ const protectedRoutes: {
   method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options";
   path: string;
 }[] = [
+  {
+    method: "get",
+    path: "/dashboard/statistics?range=week&language=507f1f77bcf86cd799439011",
+  },
   { method: "get", path: "/language" },
   { method: "post", path: "/content" },
   { method: "post", path: "/timer/start" },
