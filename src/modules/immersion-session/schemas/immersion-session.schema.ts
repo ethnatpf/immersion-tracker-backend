@@ -39,7 +39,7 @@ export class SessionProgress {
 export const SessionProgressSchema =
   SchemaFactory.createForClass(SessionProgress);
 
-@Schema()
+@Schema({ toJSON: { versionKey: false } })
 export class ImmersionSession {
   // Duration in seconds
   @Prop({ required: true })

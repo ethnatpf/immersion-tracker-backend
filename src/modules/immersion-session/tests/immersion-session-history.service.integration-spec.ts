@@ -14,7 +14,7 @@ import {
   Language,
   LanguageSchema,
 } from "../../language/schemas/language.schema.js";
-import type { SessionHistoryItem } from "../interfaces/session-history.interface.js";
+import type { SessionHistoryItemResponseDto } from "../dto/session-history-response.dto.js";
 import type { SessionHistoryDto } from "../dto/session-history.dto.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
@@ -104,7 +104,7 @@ describe("ImmersionSessionService history database integration", () => {
     duration = 1200,
     owner = userId,
     id = new Types.ObjectId(),
-  ): Promise<SessionHistoryItem> {
+  ): Promise<SessionHistoryItemResponseDto> {
     const stored = await sessions.create({
       _id: id,
       content: entry._id,
@@ -366,7 +366,7 @@ describe("ImmersionSessionService history database integration", () => {
 
   it("paginates newest first with a default limit of 20", async () => {
     const entry = await content();
-    const expected: SessionHistoryItem[] = [];
+    const expected: SessionHistoryItemResponseDto[] = [];
     for (let day = 1; day <= 25; day++) {
       expected.unshift(
         await seedSession(entry, `2026-09-${String(day).padStart(2, "0")}`),

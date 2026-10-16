@@ -43,7 +43,7 @@ describe("PATCH /immersion-session/:id", () => {
 
   beforeEach(() => {
     update.mockReset();
-    update.mockResolvedValue(new sessionModel(result));
+    update.mockResolvedValue(new sessionModel({ ...result, __v: 0 }));
   });
 
   afterAll(async () => {

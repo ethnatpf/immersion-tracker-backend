@@ -1,6 +1,11 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
+import { Mongoose } from "mongoose";
+import {
+  ImmersionSession,
+  ImmersionSessionSchema,
+} from "~/modules/immersion-session/schemas/immersion-session.schema.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { ImmersionSessionService } from "~/modules/immersion-session/immersion-session.service.js";
 import { createTestApp } from "../helpers/create-test-app.js";
@@ -54,6 +59,21 @@ describe("POST /immersion-session", () => {
     const response = await post(input).expect(201);
     expect(create).toHaveBeenCalledExactlyOnceWith(input, userId);
     expect(response.body).toMatchObject({ ...input, user_id: userId });
+  });
+
+  it("omits the stored document version from the created session response", async () => {
+    const model = new Mongoose().model(
+      ImmersionSession.name,
+      ImmersionSessionSchema,
+    );
+    const session = new model({ ...input, user_id: userId, __v: 0 });
+    spyOnCreate().mockResolvedValueOnce(session);
+
+    const response = await post(input).expect(201);
+
+    expect(response.body).toMatchObject({ ...input, user_id: userId });
+    expect(response.body).not.toHaveProperty("__v");
+    expect(session.__v).toBe(0);
   });
 
   it("ignores a body-supplied owner", async () => {

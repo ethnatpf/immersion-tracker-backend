@@ -10,7 +10,7 @@ import type { CreateImmersionSessionDto } from "./dto/create-immersion-session.d
 import type { UpdateImmersionSessionDto } from "./dto/update-immersion-session.dto.js";
 import type { SessionHistoryDto } from "./dto/session-history.dto.js";
 import { matchesContentTitle } from "../../utils/matches-content-title.js";
-import type { SessionHistoryResult } from "./interfaces/session-history.interface.js";
+import type { SessionHistoryResponseDto } from "./dto/session-history-response.dto.js";
 import {
   ImmersionSession,
   type ImmersionSessionDocument,
@@ -82,7 +82,7 @@ export class ImmersionSessionService {
   async history(
     input: SessionHistoryDto,
     userId: string,
-  ): Promise<SessionHistoryResult> {
+  ): Promise<SessionHistoryResponseDto> {
     const { page = 1, limit = 20 } = input;
     const query = input.q?.trim().toLowerCase() ?? "";
     const dateRange = {
