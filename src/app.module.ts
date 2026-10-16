@@ -7,8 +7,7 @@ import { ContentModule } from "./modules/content/content.module.js";
 import { TimerModule } from "./modules/timer/timer.module.js";
 import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
 import { UserModule } from "./modules/user/user.module.js";
-import { PrometheusModule } from "@willsoto/nestjs-prometheus";
-import { MetricsController } from "./modules/metrics/metrics.controller.js";
+import { MetricsModule } from "./modules/metrics/metrics.module.js";
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { MetricsController } from "./modules/metrics/metrics.controller.js";
     TimerModule,
     DashboardModule,
     UserModule,
-    PrometheusModule.register({ controller: MetricsController }),
+    MetricsModule,
   ],
   controllers: [],
   providers: [],

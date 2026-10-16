@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { createAuthFixture } from "./helpers/auth.fixture.js";
-import { createTestApp } from "./helpers/create-test-app.js";
+import { createAuthFixture } from "../helpers/auth.fixture.js";
+import { createTestApp } from "../helpers/create-test-app.js";
 
 describe("Metrics authentication", () => {
   let app: INestApplication;
