@@ -69,7 +69,7 @@ describe("PATCH /content/:id", () => {
     "accepts a partial update and returns the updated content: %j",
     async (input) => {
       update.mockResolvedValueOnce(
-        new contentModel({ ...result, ...input, user_id: userId }),
+        new contentModel({ ...result, ...input, user_id: userId, __v: 0 }),
       );
       const response = await patch().send(input).expect(200);
 

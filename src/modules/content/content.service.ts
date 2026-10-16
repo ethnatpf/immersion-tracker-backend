@@ -13,8 +13,8 @@ import type { UpdateContentDto } from "./dto/update-content.dto.js";
 import type { SearchContentDto } from "./dto/search-content.dto.js";
 import { Language } from "../language/schemas/language.schema.js";
 import { matchesContentTitle } from "../../utils/matches-content-title.js";
-import type { ContentSearchResult } from "./interfaces/content-search.interface.js";
-import type { ContentDetails } from "./interfaces/content-details.interface.js";
+import type { ContentSearchResponseDto } from "./dto/content-search-response.dto.js";
+import type { ContentDetailsResponseDto } from "./dto/content-details-response.dto.js";
 import { ImmersionSession } from "../immersion-session/schemas/immersion-session.schema.js";
 
 @Injectable()
@@ -26,7 +26,10 @@ export class ContentService {
     private readonly immersionSessionModel: Model<ImmersionSession>,
   ) {}
 
-  async getById(id: string, userId: string): Promise<ContentDetails> {
+  async getById(
+    id: string,
+    userId: string,
+  ): Promise<ContentDetailsResponseDto> {
     const content = await this.contentModel
       .findOne({ _id: id, user_id: userId })
       .select({ title: 1, type: 1, completed: 1 })
@@ -75,7 +78,7 @@ export class ContentService {
   async search(
     input: SearchContentDto,
     userId: string,
-  ): Promise<ContentSearchResult> {
+  ): Promise<ContentSearchResponseDto> {
     const { page = 1, limit = 20 } = input;
     const query = input.q?.trim().toLowerCase() ?? "";
     const contentQuery = this.contentModel.find({

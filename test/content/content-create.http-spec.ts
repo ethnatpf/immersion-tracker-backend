@@ -2,10 +2,13 @@ import "reflect-metadata";
 import { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { getModelToken } from "@nestjs/mongoose";
-import { Model, mongo } from "mongoose";
+import { Model, Mongoose, mongo } from "mongoose";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { createTestApp } from "../helpers/create-test-app.js";
-import { Content } from "~/modules/content/schemas/content.schema.js";
+import {
+  Content,
+  ContentSchema,
+} from "~/modules/content/schemas/content.schema.js";
 import { ContentService } from "~/modules/content/content.service.js";
 
 describe("POST /content", () => {
@@ -80,6 +83,30 @@ describe("POST /content", () => {
       .expect(201);
 
     expect(response.body.user_id).toBe(userId);
+  });
+
+  it("omits the stored document version from the created content response", async () => {
+    const model = new Mongoose().model(Content.name, ContentSchema);
+    const content = new model({
+      ...validContent,
+      user_id: userId,
+      completed: false,
+      __v: 0,
+    });
+    const create = vi
+      .spyOn(app.get(ContentService), "create")
+      .mockResolvedValueOnce(content);
+    try {
+      const response = await postContent().send(validContent).expect(201);
+      expect(response.body).toMatchObject({
+        ...validContent,
+        completed: false,
+      });
+      expect(response.body).not.toHaveProperty("__v");
+      expect(content.__v).toBe(0);
+    } finally {
+      create.mockRestore();
+    }
   });
 
   describe.each(["title", "type", "language"] as const)(

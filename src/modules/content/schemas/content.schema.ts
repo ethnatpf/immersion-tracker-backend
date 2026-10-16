@@ -3,7 +3,7 @@ import { HydratedDocument, SchemaTypes } from "mongoose";
 import { Language } from "~/modules/language/schemas/language.schema.js";
 
 // Represents an immersion content (a book, an anime, etc)
-@Schema()
+@Schema({ toJSON: { versionKey: false } })
 export class Content {
   @Prop({ required: true })
   title: string;

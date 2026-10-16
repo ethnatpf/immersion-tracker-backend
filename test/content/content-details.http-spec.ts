@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { NotFoundException, type INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { ContentService } from "~/modules/content/content.service.js";
-import { ContentDetails } from "~/modules/content/interfaces/content-details.interface.js";
+import type { ContentDetailsResponseDto } from "~/modules/content/dto/content-details-response.dto.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { createTestApp } from "../helpers/create-test-app.js";
 
@@ -12,7 +12,7 @@ describe("GET /content/:id", () => {
   let userId: string;
   const contentId = "507f1f77bcf86cd799439011";
   const getById = vi.fn<ContentService["getById"]>();
-  const result: ContentDetails = {
+  const result = {
     id: contentId,
     title: "The Forest Chronicles",
     type: "book",
@@ -24,7 +24,7 @@ describe("GET /content/:id", () => {
       duration: 1237,
       progress: { unit: "page", start: 11, end: 25 },
     },
-  };
+  } satisfies ContentDetailsResponseDto;
 
   beforeAll(async () => {
     const fixture = createAuthFixture();

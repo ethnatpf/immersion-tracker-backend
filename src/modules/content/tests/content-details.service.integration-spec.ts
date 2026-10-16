@@ -16,7 +16,7 @@ import {
   Language,
   LanguageSchema,
 } from "../../language/schemas/language.schema.js";
-import type { ContentDetails } from "../interfaces/content-details.interface.js";
+import type { ContentDetailsResponseDto } from "../dto/content-details-response.dto.js";
 
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
 type StoredSession = Omit<ImmersionSession, "content"> & {
@@ -107,7 +107,7 @@ describe("ContentService getById database integration", () => {
       progress?: SessionProgress;
       id?: Types.ObjectId;
     } = {},
-  ): Promise<NonNullable<ContentDetails["lastImmersionSession"]>> {
+  ): Promise<NonNullable<ContentDetailsResponseDto["lastImmersionSession"]>> {
     const stored = await sessions.create({
       _id: options.id ?? new Types.ObjectId(),
       content,
