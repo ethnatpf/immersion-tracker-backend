@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { Reflector } from "@nestjs/core";
+import { METRICS_AUTHENTICATION } from "./metrics-token.guard.js";
 import {
   type AuthOptions,
   auth,
@@ -18,6 +20,15 @@ export class AuthorizationGuard implements CanActivate {
   constructor(private readonly options?: AuthOptions) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (
+      new Reflector().getAllAndOverride<boolean>(METRICS_AUTHENTICATION, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    ) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
