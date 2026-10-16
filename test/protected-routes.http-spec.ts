@@ -9,6 +9,7 @@ const protectedRoutes: {
   method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options";
   path: string;
 }[] = [
+  { method: "get", path: "/user/preferences" },
   {
     method: "get",
     path: "/dashboard/statistics?range=week&language=507f1f77bcf86cd799439011",

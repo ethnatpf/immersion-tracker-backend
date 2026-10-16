@@ -6,6 +6,7 @@ import { LanguageModule } from "./modules/language/language.module.js";
 import { ContentModule } from "./modules/content/content.module.js";
 import { TimerModule } from "./modules/timer/timer.module.js";
 import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
+import { UserModule } from "./modules/user/user.module.js";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
     ContentModule,
     TimerModule,
     DashboardModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],
