@@ -18,6 +18,7 @@ authenticate metrics scrapes.
 Start the development containers from the `containers` folder before running the API:
 
 ```bash
+mkdir -p logs
 cd containers
 docker compose --env-file ../.env up -d --wait
 cd ..
@@ -34,6 +35,9 @@ Start the development server with automatic reload:
 ```bash
 bun start:dev
 ```
+
+To also collect application logs in Grafana, use `bun start:dev:logs` instead. This Bash command keeps terminal output
+and appends stdout and stderr to the `logs/backend.log` file. Use one development server at a time.
 
 The API documentation is available at [localhost:3000/api](http://localhost:3000/api).
 
@@ -80,6 +84,32 @@ and password `admin`, then choose a new password when prompted.
 During initial setup, import the dashboard JSON files from
 [`containers/grafana/dashboards`](containers/grafana/dashboards) into Grafana using
 its dashboard import option. The Prometheus data source is provisioned automatically.
+
+## Logs with Alloy and Loki
+
+Alloy reads `logs/backend.log` through a read-only directory mount and sends the
+application's JSON records to Loki. Non-JSON compiler/watch output is discarded.
+
+The local log file grows continuously and is not automatically rotated. If it
+becomes too large, stop the API, run `truncate -s 0 logs/backend.log` from the
+project root, wait a few seconds for Alloy to detect the change, then restart the API.
+
+### Querying logs in Grafana
+
+Open Grafana's **Explore**, select the provisioned **Loki** datasource, and query:
+
+```logql
+{service_name="immersion-tracker-api"} | json
+```
+
+Find a request's completion and error logs using its `X-Request-ID` response header:
+
+```logql
+{service_name="immersion-tracker-api"} | json | requestId="paste-request-id-here"
+```
+
+Loki is available only locally at [localhost:3100](http://localhost:3100/ready),
+and Alloy's diagnostics are at [localhost:12345](http://localhost:12345).
 
 ## Notes
 

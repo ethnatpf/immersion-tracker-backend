@@ -1,0 +1,51 @@
+logging {
+  level  = "info"
+  format = "json"
+}
+
+loki.source.file "backend" {
+  targets = [{
+    __path__     = "/var/log/backend/backend.log",
+    service_name = "immersion-tracker-api",
+  }]
+  forward_to = [loki.process.backend.receiver]
+
+  file_match {
+    enabled     = true
+    sync_period = "5s"
+  }
+}
+
+loki.process "backend" {
+  // Nest CLI compilation and watch messages are not application JSON logs.
+  stage.json {
+    expressions = {
+      level     = "level",
+      timestamp = "timestamp",
+    }
+    drop_malformed = true
+  }
+
+  stage.timestamp {
+    source            = "timestamp"
+    format            = "UnixMs"
+    action_on_failure = "skip"
+  }
+
+  stage.labels {
+    values = { level = "" }
+  }
+
+  // Request IDs and other request fields stay in JSON, not indexed labels.
+  stage.label_keep {
+    values = ["service_name", "level"]
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
