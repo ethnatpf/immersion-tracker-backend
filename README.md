@@ -71,6 +71,12 @@ on port 3000. Update that target if you change the API port. Once the API is run
 check [Prometheus targets](http://localhost:9090/targets) for the
 `immersion-tracker-api` job to be UP. It will be DOWN until the API starts.
 
+## Grafana
+
+Grafana starts with the development containers and is available at
+[localhost:3001](http://localhost:3001). Sign in initially with username `admin`
+and password `admin`, then choose a new password when prompted.
+
 ## Notes
 
 ### MongoDB
