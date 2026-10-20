@@ -3,6 +3,7 @@ import { AppModule } from "./app.module.js";
 import { configureApp } from "./configure-app.js";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { configureDayjs } from "./configure-dayjs.js";
+import { requestLogger } from "./logging/request-logger.js";
 
 configureDayjs();
 
@@ -16,7 +17,10 @@ async function bootstrap() {
       duplicate: "error",
       shadow: "warn",
     },
+    logger: requestLogger,
   });
+
+  configureApp(app);
 
   const config = new DocumentBuilder()
     .setTitle("Immersion tracker API")
@@ -27,7 +31,6 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, documentFactory);
 
-  configureApp(app);
   await app.listen(process.env.PORT ?? 3000);
 }
 await bootstrap();

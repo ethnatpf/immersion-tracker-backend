@@ -77,6 +77,10 @@ Grafana starts with the development containers and is available at
 [localhost:3001](http://localhost:3001). Sign in initially with username `admin`
 and password `admin`, then choose a new password when prompted.
 
+During initial setup, import the dashboard JSON files from
+[`containers/grafana/dashboards`](containers/grafana/dashboards) into Grafana using
+its dashboard import option. The Prometheus data source is provisioned automatically.
+
 ## Notes
 
 ### MongoDB
