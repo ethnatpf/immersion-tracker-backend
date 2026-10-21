@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     globals: true,
     root: './',
-    setupFiles: ['./test/helpers/setup-dayjs.ts'],
+    setupFiles: ['./http-tests/helpers/setup-dayjs.ts'],
     include: ['**/*.spec.ts'],
   },
 });

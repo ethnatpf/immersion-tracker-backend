@@ -7,6 +7,61 @@ import { pathToFileURL } from "node:url";
 import protobuf from "protobufjs";
 import ts from "typescript";
 
+import { vi } from "vitest";
+import { NodeSDK, type NodeSDKConfiguration } from "@opentelemetry/sdk-node";
+import { MongoDBInstrumentation } from "@opentelemetry/instrumentation-mongodb";
+
+vi.mock("@opentelemetry/sdk-node", () => ({
+  NodeSDK: vi.fn(function () {
+    return { start: vi.fn(), shutdown: vi.fn().mockResolvedValue(undefined) };
+  }),
+}));
+
+describe("telemetry instrumentation", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.stubEnv("OTEL_SDK_DISABLED", "false");
+  });
+
+  afterEach(() => {
+    const configuration = vi.mocked(NodeSDK).mock.calls[0]?.[0];
+    for (const instrumentation of configuration?.instrumentations?.flat() ??
+      []) {
+      instrumentation.disable();
+    }
+    vi.unstubAllEnvs();
+  });
+
+  it("registers MongoDB instrumentation without enhanced query reporting and starts only once", async () => {
+    const { startTelemetry } = await import("./telemetry.js");
+    startTelemetry();
+    startTelemetry();
+
+    expect(NodeSDK).toHaveBeenCalledTimes(1);
+    const configuration = vi.mocked(NodeSDK).mock
+      .calls[0][0] as Partial<NodeSDKConfiguration>;
+    const mongodb = configuration.instrumentations
+      ?.flat()
+      .find(
+        (instrumentation) => instrumentation instanceof MongoDBInstrumentation,
+      );
+    expect(mongodb).toBeDefined();
+    expect(mongodb?.getConfig().enhancedDatabaseReporting).toBe(false);
+    expect(
+      vi.mocked(NodeSDK).mock.results[0].value.start,
+    ).toHaveBeenCalledOnce();
+  });
+
+  it("does not initialize instrumentation when telemetry is disabled", async () => {
+    vi.stubEnv("OTEL_SDK_DISABLED", "true");
+    const { startTelemetry } = await import("./telemetry.js");
+    startTelemetry();
+
+    expect(NodeSDK).not.toHaveBeenCalled();
+  });
+});
+
 // Only the standard OTLP fields asserted below; protobuf skips other fields.
 const exportType = protobuf
   .parse(
@@ -124,7 +179,7 @@ describe("HTTP tracing export", () => {
     child = spawn(
       process.execPath,
       [
-        "test/helpers/tracing-process.mjs",
+        "src/telemetry/tracing-process.mjs",
         pathToFileURL(`${directory}/telemetry.mjs`).href,
       ],
       {

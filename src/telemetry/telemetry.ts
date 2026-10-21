@@ -1,5 +1,6 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { MongoDBInstrumentation } from "@opentelemetry/instrumentation-mongodb";
 import {
   ExpressInstrumentation,
   ExpressLayerType,
@@ -23,6 +24,7 @@ export function startTelemetry(): void {
     metricReaders: [],
     logRecordProcessors: [],
     instrumentations: [
+      new MongoDBInstrumentation({ enhancedDatabaseReporting: false }),
       new HttpInstrumentation({
         ignoreIncomingRequestHook(request) {
           const path = (request.url ?? "").split("?", 1)[0];

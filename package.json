@@ -34,6 +34,7 @@
     "@opentelemetry/instrumentation": "^0.300.0",
     "@opentelemetry/instrumentation-express": "^0.72.0",
     "@opentelemetry/instrumentation-http": "^0.300.0",
+    "@opentelemetry/instrumentation-mongodb": "^0.77.0",
     "@opentelemetry/sdk-node": "^0.300.0",
     "@prometheus-io/client": "^0.16.1",
     "@willsoto/nestjs-prometheus": "^7.0.0",
