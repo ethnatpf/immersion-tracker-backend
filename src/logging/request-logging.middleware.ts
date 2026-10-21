@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isSpanContextValid, trace, TraceFlags } from "@opentelemetry/api";
 import type { NextFunction, Request, Response } from "express";
 import { requestContext, requestLogger } from "./request-logger.js";
 
@@ -8,7 +9,17 @@ export function requestLoggingMiddleware(
   next: NextFunction,
 ): void {
   const started = process.hrtime.bigint();
-  const context = { requestId: randomUUID() };
+  const spanContext = trace.getActiveSpan()?.spanContext();
+  // Capture before the HTTP span ends so finish callbacks keep its trace ID.
+  const context = {
+    requestId: randomUUID(),
+    traceId:
+      spanContext &&
+      isSpanContextValid(spanContext) &&
+      spanContext.traceFlags & TraceFlags.SAMPLED
+        ? spanContext.traceId
+        : undefined,
+  };
   response.setHeader("X-Request-ID", context.requestId);
 
   requestContext.run(context, () => {

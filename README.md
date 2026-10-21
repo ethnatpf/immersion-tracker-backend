@@ -100,6 +100,8 @@ Open Grafana's **Explore**, select the provisioned **Loki** datasource, and quer
 {service_name="immersion-tracker-api"} | json
 ```
 
+For sampled requests, expand a log entry and click **View trace** beside `trace_id` to open its trace.
+
 Find a request's completion and error logs using its `X-Request-ID` response header:
 
 ```logql

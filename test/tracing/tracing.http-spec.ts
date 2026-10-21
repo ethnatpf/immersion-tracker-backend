@@ -55,11 +55,13 @@ describe("HTTP tracing export", () => {
   let exports: Export[];
   let paths: string[];
   let diagnostics: string;
+  let logOutput: string;
 
   beforeEach(async () => {
     exports = [];
     paths = [];
     diagnostics = "";
+    logOutput = "";
     await mkdir(".tmp", { recursive: true });
     directory = await mkdtemp(resolve(".tmp/tracing-"));
     // Execute emitted ESM in Node rather than Vitest's module loader.
@@ -73,6 +75,18 @@ describe("HTTP tracing export", () => {
         },
       }).outputText,
     );
+    for (const name of ["request-logger", "request-logging.middleware"]) {
+      const source = await readFile(`src/logging/${name}.ts`, "utf8");
+      await writeFile(
+        `${directory}/${name}.js`,
+        ts.transpileModule(source, {
+          compilerOptions: {
+            target: ts.ScriptTarget.ES2023,
+            module: ts.ModuleKind.ESNext,
+          },
+        }).outputText,
+      );
+    }
     receiver = createServer(async (request, response) => {
       paths.push(request.url!);
       const chunks: Buffer[] = [];
@@ -125,9 +139,11 @@ describe("HTTP tracing export", () => {
     );
     child.stderr!.on("data", (chunk) => {
       diagnostics += String(chunk);
+      logOutput += String(chunk);
     });
     child.stdout!.on("data", (chunk) => {
       diagnostics += String(chunk);
+      logOutput += String(chunk);
     });
     const ready = once(child, "message");
     const exited = once(child, "exit").then(() => {
@@ -158,6 +174,86 @@ describe("HTTP tracing export", () => {
       ]),
     );
   }
+
+  function logs(): Record<string, unknown>[] {
+    return logOutput
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+  }
+
+  it("correlates concurrent handler, error, and completion logs with exported HTTP spans", async () => {
+    const base = await start({
+      TRACING_TEST_EXPRESS: "true",
+      TRACING_TEST_LOGGING: "true",
+    });
+    const traceIds = [
+      "11111111111111111111111111111111",
+      "22222222222222222222222222222222",
+    ];
+    const responses = await Promise.all(
+      traceIds.map((traceId, index) =>
+        fetch(`${base}/${index ? "failure" : "content"}/id`, {
+          headers: { traceparent: `00-${traceId}-1234567890123456-01` },
+        }),
+      ),
+    );
+    expect(responses.map((response) => response.status)).toEqual([200, 500]);
+    await stop();
+    for (const [index, response] of responses.entries()) {
+      const requestLogs = logs().filter(
+        (record) => record.requestId === response.headers.get("x-request-id"),
+      );
+      expect(requestLogs).toHaveLength(2);
+      expect(
+        requestLogs.every((record) => record.trace_id === traceIds[index]),
+      ).toBe(true);
+      expect(
+        requestLogs.some(
+          (record) => record.message === "HTTP request completed",
+        ),
+      ).toBe(true);
+      expect(
+        spans().some(
+          (span) =>
+            Buffer.from(span.traceId, "base64").toString("hex") ===
+            traceIds[index],
+        ),
+      ).toBe(true);
+    }
+    expect(
+      logs().find((record) => record.message === "Tracing fixture ready"),
+    ).not.toHaveProperty("trace_id");
+  });
+
+  it.each([
+    { name: "unsampled", flags: "00", disabled: "false" },
+    { name: "disabled", flags: "01", disabled: "true" },
+  ])(
+    "omits trace_id from logs when tracing is $name",
+    async ({ flags, disabled }) => {
+      const base = await start({
+        TRACING_TEST_EXPRESS: "true",
+        TRACING_TEST_LOGGING: "true",
+        OTEL_SDK_DISABLED: disabled,
+      });
+      const response = await fetch(`${base}/content/id`, {
+        headers: {
+          traceparent: `00-11111111111111111111111111111111-1234567890123456-${flags}`,
+        },
+      });
+      expect(response.status).toBe(200);
+      await stop();
+      const requestLogs = logs().filter(
+        (record) => record.requestId === response.headers.get("x-request-id"),
+      );
+      expect(requestLogs).toHaveLength(2);
+      for (const record of requestLogs)
+        expect(record).not.toHaveProperty("trace_id");
+      expect(exports).toEqual([]);
+    },
+  );
 
   it("exports successful and failed server spans with propagated context on shutdown", async () => {
     const base = await start({

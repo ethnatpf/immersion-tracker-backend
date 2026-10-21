@@ -19,17 +19,37 @@ let handler = (request, response) => {
 if (process.env.TRACING_TEST_EXPRESS === "true") {
   const { default: express } = await import("express");
   const app = express();
+  let logger;
+  if (process.env.TRACING_TEST_LOGGING === "true") {
+    const { requestLoggingMiddleware } = await import(
+      new URL("./request-logging.middleware.js", process.argv[2])
+    );
+    ({ requestLogger: logger } = await import(
+      new URL("./request-logger.js", process.argv[2])
+    ));
+    logger.log("Tracing fixture ready");
+    app.use(requestLoggingMiddleware);
+  }
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   const router = express.Router();
   router.use(function fixtureMiddleware(_request, _response, next) {
     next();
   });
-  router.get("/content/:id", (_request, response) =>
-    response.json({ ok: true }),
-  );
-  router.get("/failure/:id", (_request, response) => response.sendStatus(500));
+  router.get("/content/:id", async (_request, response) => {
+    await new Promise((resolve) => setImmediate(resolve));
+    logger?.log("Request handled");
+    response.json({ ok: true });
+  });
+  router.get("/failure/:id", async (_request, _response, next) => {
+    await new Promise((resolve) => setImmediate(resolve));
+    next(new Error("Request failed"));
+  });
   app.use(router);
+  app.use((error, _request, response, _next) => {
+    logger?.error(error);
+    response.sendStatus(500);
+  });
   handler = app;
 }
 const server = createServer(handler);

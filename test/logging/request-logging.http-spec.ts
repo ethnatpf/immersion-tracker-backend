@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { type INestApplication, Logger } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import request from "supertest";
+import { trace, TraceFlags } from "@opentelemetry/api";
 import { LanguageService } from "../../src/modules/language/language.service.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { createTestApp } from "../helpers/create-test-app.js";
@@ -136,6 +137,20 @@ describe("Request logging", () => {
   });
 
   it("correlates Nest errors and concurrent asynchronous requests without losing stacks", async () => {
+    const traceIds = [
+      "11111111111111111111111111111111",
+      "22222222222222222222222222222222",
+    ];
+    const activeSpan = vi.spyOn(trace, "getActiveSpan");
+    for (const traceId of traceIds) {
+      activeSpan.mockReturnValueOnce(
+        trace.wrapSpanContext({
+          traceId,
+          spanId: "1234567890123456",
+          traceFlags: TraceFlags.SAMPLED,
+        }),
+      );
+    }
     let entered!: () => void;
     let release!: () => void;
     const started = new Promise<void>((resolve) => {
@@ -177,6 +192,7 @@ describe("Request logging", () => {
       expect(errors[0]).toMatchObject({
         context: "ExceptionsHandler",
         message: `${index === 0 ? "first" : "second"} request failed`,
+        trace_id: traceIds[index],
       });
       expect(errors[0]?.error).toMatchObject({
         stack: expect.stringContaining("request-logging.http-spec.ts"),
@@ -184,8 +200,48 @@ describe("Request logging", () => {
       expect(
         completions().filter((record) => record.requestId === id),
       ).toHaveLength(1);
+      expect(
+        completions().find((record) => record.requestId === id)?.trace_id,
+      ).toBe(traceIds[index]);
     }
   });
+
+  it.each([
+    { name: "missing", traceId: undefined, flags: TraceFlags.NONE },
+    {
+      name: "unsampled",
+      traceId: "11111111111111111111111111111111",
+      flags: TraceFlags.NONE,
+    },
+    {
+      name: "invalid",
+      traceId: "00000000000000000000000000000000",
+      flags: TraceFlags.SAMPLED,
+    },
+  ])(
+    "omits trace_id for $name span context even with incoming trace headers",
+    async ({ traceId, flags }) => {
+      vi.spyOn(trace, "getActiveSpan").mockReturnValue(
+        traceId
+          ? trace.wrapSpanContext({
+              traceId,
+              spanId: "1234567890123456",
+              traceFlags: flags,
+            })
+          : undefined,
+      );
+      await request(app.getHttpServer())
+        .get("/language")
+        .set("trace_id", "11111111111111111111111111111111")
+        .set(
+          "traceparent",
+          "00-11111111111111111111111111111111-1234567890123456-01",
+        )
+        .expect(401);
+      expect(completions()).toHaveLength(1);
+      expect(completions()[0]).not.toHaveProperty("trace_id");
+    },
+  );
 
   it.each([
     "/metrics",
@@ -208,5 +264,8 @@ describe("Request logging", () => {
     expect(
       records.find((record) => record.message === "Ready"),
     ).not.toHaveProperty("requestId");
+    expect(
+      records.find((record) => record.message === "Ready"),
+    ).not.toHaveProperty("trace_id");
   });
 });

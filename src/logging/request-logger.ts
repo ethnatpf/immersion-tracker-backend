@@ -1,7 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { ConsoleLogger } from "@nestjs/common";
 
-export const requestContext = new AsyncLocalStorage<{ requestId: string }>();
+export const requestContext = new AsyncLocalStorage<{
+  requestId: string;
+  traceId?: string;
+}>();
 
 export class RequestLogger extends ConsoleLogger {
   constructor() {
@@ -20,6 +23,7 @@ export class RequestLogger extends ConsoleLogger {
     const record = super.getJsonLogObject(message, options);
     const context = requestContext.getStore();
     if (context) record.requestId = context.requestId;
+    if (context?.traceId) record.trace_id = context.traceId;
     return record;
   }
 }
