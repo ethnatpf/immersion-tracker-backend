@@ -3,6 +3,36 @@ logging {
   format = "json"
 }
 
+otelcol.receiver.otlp "traces" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.batch.traces.input]
+  }
+}
+
+otelcol.processor.batch "traces" {
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
 loki.source.file "backend" {
   targets = [{
     __path__     = "/var/log/backend/backend.log",
@@ -33,6 +63,7 @@ loki.process "backend" {
   }
 
   stage.labels {
+    // Empty string means to use the same field name as the label. We extracted the level value above.
     values = { level = "" }
   }
 

@@ -15,13 +15,11 @@ Update `.env` with your MongoDB and Auth0 configuration, and set `METRICS_TOKEN`
 to a nonempty random token. The API and Prometheus use this same token to
 authenticate metrics scrapes.
 
-Start the development containers from the `containers` folder before running the API:
+Start the development containers from the project root before running the API:
 
 ```bash
 mkdir -p logs
-cd containers
-docker compose --env-file ../.env up -d --wait
-cd ..
+bun containers:up
 ```
 
 Seed the database initially from the project root:

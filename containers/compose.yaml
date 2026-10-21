@@ -11,6 +11,8 @@ services:
         condition: service_healthy
       loki:
         condition: service_started
+      tempo:
+        condition: service_started
     healthcheck:
       test:
         ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
@@ -45,6 +47,16 @@ services:
       - ./loki.yaml:/etc/loki/config.yaml:ro
       - loki_data:/loki
 
+  tempo:
+    image: grafana/tempo:3.1.0
+    command: ["-target=all", "-config.file=/etc/tempo/config.yaml"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3200:3200"
+    volumes:
+      - ./tempo.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+
   alloy:
     image: grafana/alloy:v1.21.0
     command:
@@ -55,6 +67,8 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:12345:12345"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - type: bind
@@ -66,6 +80,8 @@ services:
       - alloy_data:/var/lib/alloy/data
     depends_on:
       loki:
+        condition: service_started
+      tempo:
         condition: service_started
 
   mongodb:
@@ -98,6 +114,7 @@ volumes:
   prometheus_data:
   loki_data:
   alloy_data:
+  tempo_data:
 
 secrets:
   metrics_token:
