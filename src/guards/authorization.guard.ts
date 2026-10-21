@@ -17,6 +17,8 @@ import {
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
+  private validateAccessToken?: ReturnType<typeof auth>;
+
   constructor(private readonly options?: AuthOptions) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -33,13 +35,14 @@ export class AuthorizationGuard implements CanActivate {
     const response = context.switchToHttp().getResponse<Response>();
 
     try {
-      const validateAccessToken = auth(
+      // Reuse the verifier so its discovery and JWKS caches survive requests.
+      const validateAccessToken = (this.validateAccessToken ??= auth(
         this.options ?? {
           audience: process.env.AUTH_AUDIENCE,
           issuerBaseURL: process.env.AUTH_ISSUER_BASE_URL,
           tokenSigningAlg: "RS256",
         },
-      );
+      ));
       await new Promise<void>((resolve, reject) => {
         validateAccessToken(request, response, (error?: unknown) => {
           if (error) reject(error);
