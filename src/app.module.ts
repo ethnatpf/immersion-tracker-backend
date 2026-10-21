@@ -8,6 +8,7 @@ import { TimerModule } from "./modules/timer/timer.module.js";
 import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
 import { UserModule } from "./modules/user/user.module.js";
 import { MetricsModule } from "./modules/metrics/metrics.module.js";
+import { TelemetryShutdownService } from "./telemetry/telemetry-shutdown.service.js";
 
 @Module({
   imports: [
@@ -24,6 +25,6 @@ import { MetricsModule } from "./modules/metrics/metrics.module.js";
     MetricsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [TelemetryShutdownService],
 })
 export class AppModule {}

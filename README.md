@@ -109,6 +109,12 @@ Find a request's completion and error logs using its `X-Request-ID` response hea
 Loki is available only locally at [localhost:3100](http://localhost:3100/ready),
 and Alloy's diagnostics are at [localhost:12345](http://localhost:12345).
 
+## Traces
+
+HTTP tracing exports to local Alloy by default. Set `OTEL_SDK_DISABLED=true` to
+disable it. In Grafana **Explore**, select **Tempo** and search for
+`{ resource.service.name = "immersion-tracker-api" }`.
+
 ## Notes
 
 ### MongoDB

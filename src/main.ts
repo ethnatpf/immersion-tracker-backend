@@ -1,36 +1,21 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module.js";
-import { configureApp } from "./configure-app.js";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { configureDayjs } from "./configure-dayjs.js";
-import { requestLogger } from "./logging/request-logger.js";
+import { register } from "node:module";
+import { loadEnvFile } from "node:process";
 
-configureDayjs();
-
-async function bootstrap() {
-  if (!process.env.MONGODB_URL) {
-    throw new Error("MONGODB_URL environment variable is required");
-  }
-
-  const app = await NestFactory.create(AppModule, {
-    routeConflictPolicy: {
-      duplicate: "error",
-      shadow: "warn",
-    },
-    logger: requestLogger,
-  });
-
-  configureApp(app);
-
-  const config = new DocumentBuilder()
-    .setTitle("Immersion tracker API")
-    .setDescription("API for the immersion tracker website")
-    .setVersion("1.0")
-    .addBearerAuth()
-    .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, documentFactory);
-
-  await app.listen(process.env.PORT ?? 3000);
+try {
+  loadEnvFile();
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 }
-await bootstrap();
+
+// Register the ESM hook and start tracing before loading Nest or HTTP modules.
+register("@opentelemetry/instrumentation/hook.mjs", import.meta.url);
+const { startTelemetry, shutdownTelemetry } =
+  await import("./telemetry/telemetry.js");
+startTelemetry();
+
+try {
+  await import("./bootstrap.js");
+} catch (error) {
+  await shutdownTelemetry();
+  throw error;
+}
