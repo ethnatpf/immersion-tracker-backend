@@ -37,7 +37,7 @@ bun start:dev
 To also collect application logs in Grafana, use `bun start:dev:logs` instead. This Bash command keeps terminal output
 and appends stdout and stderr to the `logs/backend.log` file. Use one development server at a time.
 
-The API documentation is available at [localhost:3000/api](http://localhost:3000/api).
+The API documentation is available at [localhost:4000/api](http://localhost:4000/api).
 
 ## Tests
 
@@ -69,7 +69,7 @@ API's `/metrics` endpoint every 15 seconds using `METRICS_TOKEN` mounted as a Co
 secret.
 
 The scrape target in `containers/prometheus.yaml` assumes the API runs on the host
-on port 3000. Update that target if you change the API port. Once the API is running,
+on port 4000. Update that target if you change the API port. Once the API is running,
 check [Prometheus targets](http://localhost:9090/targets) for the
 `immersion-tracker-api` job to be UP. It will be DOWN until the API starts.
 

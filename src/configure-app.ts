@@ -8,6 +8,9 @@ export function configureApp(
   app: INestApplication,
   options: { authorization?: AuthOptions } = {},
 ): void {
+  app.enableCors({
+    origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : false,
+  });
   app.useLogger(requestLogger);
   app.use(requestLoggingMiddleware);
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
