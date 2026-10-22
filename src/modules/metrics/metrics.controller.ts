@@ -1,5 +1,6 @@
 import { Controller, Get, Res } from "@nestjs/common";
 import {
+  ApiOperation,
   ApiBearerAuth,
   ApiOkResponse,
   ApiProduces,
@@ -12,6 +13,7 @@ import { MetricsAuthentication } from "../../guards/metrics-token.guard.js";
 @ApiBearerAuth()
 export class MetricsController extends PrometheusController {
   @Get()
+  @ApiOperation({ operationId: "metrics" })
   @MetricsAuthentication()
   @ApiProduces("text/plain")
   @ApiOkResponse({

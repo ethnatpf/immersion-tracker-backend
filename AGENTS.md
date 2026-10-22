@@ -10,6 +10,11 @@
   TypeScript imports, following existing code. `~/*` maps to `src/*`.
 - Document every endpoint's response with DTO classes and Swagger response
   decorators; use a no-content decorator for responses without a body.
+- Give every endpoint an explicit `@ApiOperation({ operationId: "..." })`.
+  Use a descriptive, globally unique camelCase name with the resource first
+  (for example, `userPreferences`, `contentSearch`, or `timerStart`) so generated
+  SDK methods have predictable names. Keep operation IDs stable when refactoring
+  controller methods.
 - Never expose Mongoose's `__v` in API responses or response DTOs.
 - Preserve existing user changes and keep work focused on the requested behavior.
   Do not expand unfinished features merely because a service or controller stub

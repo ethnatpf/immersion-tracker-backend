@@ -12,6 +12,7 @@ import { SearchContentDto } from "./dto/search-content.dto.js";
 import { ContentService } from "./content.service.js";
 import { CurrentUserId } from "../../decorators/current-user-id.decorator.js";
 import {
+  ApiOperation,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -29,6 +30,7 @@ export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Get("search")
+  @ApiOperation({ operationId: "contentSearch" })
   @ApiOkResponse({ type: ContentSearchResponseDto })
   search(
     @Query() input: SearchContentDto,
@@ -38,6 +40,7 @@ export class ContentController {
   }
 
   @Get(":id")
+  @ApiOperation({ operationId: "contentDetails" })
   @ApiOkResponse({ type: ContentDetailsResponseDto })
   getById(
     @Param() params: GetContentDto,
@@ -47,6 +50,7 @@ export class ContentController {
   }
 
   @Post()
+  @ApiOperation({ operationId: "contentCreate" })
   @ApiCreatedResponse({ type: ContentResponseDto })
   create(
     @Body() input: CreateContentDto,
@@ -56,6 +60,7 @@ export class ContentController {
   }
 
   @Patch(":id")
+  @ApiOperation({ operationId: "contentUpdate" })
   @ApiOkResponse({ type: ContentResponseDto })
   update(
     @Param() params: GetContentDto,

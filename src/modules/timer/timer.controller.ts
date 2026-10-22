@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import {
+  ApiOperation,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -21,6 +22,7 @@ export class TimerController {
   constructor(private readonly timerService: TimerService) {}
 
   @Get()
+  @ApiOperation({ operationId: "timerCurrent" })
   @ApiOkResponse({ type: CurrentTimerResponseDto })
   getCurrent(
     @CurrentUserId() userId: string,
@@ -29,6 +31,7 @@ export class TimerController {
   }
 
   @Post("start")
+  @ApiOperation({ operationId: "timerStart" })
   @ApiCreatedResponse({ type: TimerResponseDto })
   start(
     @Body() input: StartTimerDto,
@@ -38,6 +41,7 @@ export class TimerController {
   }
 
   @Post("stop")
+  @ApiOperation({ operationId: "timerStop" })
   @ApiCreatedResponse({ type: ImmersionSessionResponseDto })
   stop(@CurrentUserId() userId: string): Promise<ImmersionSessionDocument> {
     return this.timerService.stop(userId);

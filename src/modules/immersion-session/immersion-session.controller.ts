@@ -11,6 +11,7 @@ import {
   Query,
 } from "@nestjs/common";
 import {
+  ApiOperation,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -37,6 +38,7 @@ export class ImmersionSessionController {
   ) {}
 
   @Get()
+  @ApiOperation({ operationId: "immersionSessionHistory" })
   @ApiOkResponse({ type: SessionHistoryResponseDto })
   history(
     @Query() input: SessionHistoryDto,
@@ -46,6 +48,7 @@ export class ImmersionSessionController {
   }
 
   @Post()
+  @ApiOperation({ operationId: "immersionSessionCreate" })
   @ApiCreatedResponse({ type: ImmersionSessionResponseDto })
   create(
     @Body() input: CreateImmersionSessionDto,
@@ -55,6 +58,7 @@ export class ImmersionSessionController {
   }
 
   @Delete(":id")
+  @ApiOperation({ operationId: "immersionSessionDelete" })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse({ description: "Immersion session deleted" })
   remove(
@@ -65,6 +69,7 @@ export class ImmersionSessionController {
   }
 
   @Patch(":id")
+  @ApiOperation({ operationId: "immersionSessionUpdate" })
   @ApiOkResponse({ type: ImmersionSessionResponseDto })
   update(
     @Param() params: UpdateImmersionSessionParamsDto,

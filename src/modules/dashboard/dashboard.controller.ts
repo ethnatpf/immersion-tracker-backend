@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiBearerAuth, ApiOkResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiBearerAuth, ApiOkResponse } from "@nestjs/swagger";
 import { CurrentUserId } from "../../decorators/current-user-id.decorator.js";
 import { DashboardStatisticsDto } from "./dto/dashboard-statistics.dto.js";
 import { DashboardStatisticsResponseDto } from "./dto/dashboard-statistics-response.dto.js";
@@ -11,6 +11,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get("statistics")
+  @ApiOperation({ operationId: "dashboardStatistics" })
   @ApiOkResponse({ type: DashboardStatisticsResponseDto })
   statistics(
     @Query() input: DashboardStatisticsDto,
