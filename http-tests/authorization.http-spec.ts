@@ -5,6 +5,11 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Controller, Get, type INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { trace } from "@opentelemetry/api";
+import {
+  InvalidTokenError,
+  UnauthorizedError,
+} from "express-oauth2-jwt-bearer";
 import request from "supertest";
 import { configureApp } from "../src/configure-app.js";
 import { CurrentUserId } from "../src/decorators/current-user-id.decorator.js";
@@ -47,7 +52,9 @@ describe("JWT authentication", () => {
 
   it("caches issuer discovery and signing keys across authenticated requests", async () => {
     const fetches: string[] = [];
-    const jwk = createPublicKey(fixture.authorization.publicKey as string).export({
+    const jwk = createPublicKey(
+      fixture.authorization.publicKey as string,
+    ).export({
       format: "jwk",
     });
     const issuerServer = createServer((req, res) => {
@@ -111,6 +118,48 @@ describe("JWT authentication", () => {
   it("rejects a missing token", async () => {
     await request(app.getHttpServer()).get("/test-auth").expect(401);
   });
+
+  it.each(["expired", "missing"] as const)(
+    "records the original %s token error on the active span",
+    async (kind) => {
+      const span = trace.wrapSpanContext({
+        traceId: "12345678901234567890123456789012",
+        spanId: "1234567890123456",
+        traceFlags: 1,
+      });
+      const recorded = vi.spyOn(span, "recordException");
+      const activeSpan = vi.spyOn(trace, "getActiveSpan").mockReturnValue(span);
+      try {
+        const pending = request(app.getHttpServer()).get("/test-auth");
+        if (kind === "expired") {
+          pending.set(
+            "Authorization",
+            `Bearer ${fixture.createToken({ exp: Math.floor(Date.now() / 1000) - 60 })}`,
+          );
+        }
+        await pending.expect(401, {
+          statusCode: 401,
+          message:
+            kind === "expired" ? "Bad credentials" : "Requires authentication",
+          error: "Unauthorized",
+        });
+
+        expect(recorded).toHaveBeenCalledExactlyOnceWith(
+          expect.any(
+            kind === "expired" ? InvalidTokenError : UnauthorizedError,
+          ),
+        );
+        if (kind === "expired") {
+          expect(recorded.mock.calls[0][0]).toMatchObject({
+            message: expect.stringContaining("exp"),
+            stack: expect.any(String),
+          });
+        }
+      } finally {
+        activeSpan.mockRestore();
+      }
+    },
+  );
 
   it.each([
     { name: "malformed token", token: () => "not-a-jwt" },

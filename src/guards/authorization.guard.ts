@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { Reflector } from "@nestjs/core";
+import { trace } from "@opentelemetry/api";
 import { METRICS_AUTHENTICATION } from "./metrics-token.guard.js";
 import {
   type AuthOptions,
@@ -50,6 +51,10 @@ export class AuthorizationGuard implements CanActivate {
         });
       });
     } catch (error) {
+      if (error instanceof Error) {
+        trace.getActiveSpan()?.recordException(error);
+      }
+
       if (error instanceof InvalidTokenError) {
         throw new UnauthorizedException("Bad credentials");
       }
