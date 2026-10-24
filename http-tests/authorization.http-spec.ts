@@ -5,7 +5,7 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Controller, Get, type INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { trace } from "@opentelemetry/api";
+import { SpanStatusCode, trace } from "@opentelemetry/api";
 import {
   InvalidTokenError,
   UnauthorizedError,
@@ -120,7 +120,7 @@ describe("JWT authentication", () => {
   });
 
   it.each(["expired", "missing"] as const)(
-    "records the original %s token error on the active span",
+    "records the original %s token error and marks the active span as an error",
     async (kind) => {
       const span = trace.wrapSpanContext({
         traceId: "12345678901234567890123456789012",
@@ -128,6 +128,7 @@ describe("JWT authentication", () => {
         traceFlags: 1,
       });
       const recorded = vi.spyOn(span, "recordException");
+      const status = vi.spyOn(span, "setStatus");
       const activeSpan = vi.spyOn(trace, "getActiveSpan").mockReturnValue(span);
       try {
         const pending = request(app.getHttpServer()).get("/test-auth");
@@ -149,6 +150,9 @@ describe("JWT authentication", () => {
             kind === "expired" ? InvalidTokenError : UnauthorizedError,
           ),
         );
+        expect(status).toHaveBeenCalledExactlyOnceWith({
+          code: SpanStatusCode.ERROR,
+        });
         if (kind === "expired") {
           expect(recorded.mock.calls[0][0]).toMatchObject({
             message: expect.stringContaining("exp"),
