@@ -72,6 +72,7 @@ describe("TimerService stop database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Stop timer test language",
+      nativeName: "Stop timer test language",
     });
     languageId = language._id;
     const content = await contents.create({

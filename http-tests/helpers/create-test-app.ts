@@ -45,6 +45,7 @@ export async function createTestApp(
       _id: Types.ObjectId;
       code: string;
       name: string;
+      nativeName: string;
       __v?: number;
     }[];
   } = {},

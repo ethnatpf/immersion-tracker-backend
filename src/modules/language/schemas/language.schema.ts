@@ -8,6 +8,9 @@ export class Language {
 
   @Prop({ required: true })
   name: string;
+
+  @Prop({ required: true })
+  nativeName: string;
 }
 
 export type LanguageDocument = HydratedDocument<Language>;

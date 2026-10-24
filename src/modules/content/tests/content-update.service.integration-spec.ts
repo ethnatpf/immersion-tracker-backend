@@ -67,6 +67,7 @@ describe("ContentService update database integration", () => {
       const language = await languages.create({
         code: `test-${randomUUID()}`,
         name,
+        nativeName: name,
       });
       languageIds.push(language._id);
     }

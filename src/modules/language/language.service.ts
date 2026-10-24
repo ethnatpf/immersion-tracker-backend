@@ -13,14 +13,15 @@ export class LanguageService {
   async findAll(): Promise<LanguageResponseDto[]> {
     const languages = await this.languageModel
       .find({})
-      .select({ _id: 1, code: 1, name: 1 })
+      .select({ _id: 1, code: 1, name: 1, nativeName: 1 })
       .lean()
       .exec();
 
-    return languages.map(({ _id, code, name }) => ({
+    return languages.map(({ _id, code, name, nativeName }) => ({
       id: _id.toHexString(),
       code,
       name,
+      nativeName,
     }));
   }
 }

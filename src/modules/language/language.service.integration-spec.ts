@@ -51,22 +51,28 @@ describe("LanguageService database integration", () => {
     expect(await service.findAll()).toEqual([]);
   });
 
-  it("returns every persisted language with only its string id, code, and name", async () => {
+  it("returns every persisted language with only its string id, code, name, and native name", async () => {
     const stored = await languages.insertMany(
       Array.from({ length: 25 }, (_, index) => ({
         code: `test-${index}`,
         name: `Test language ${index}`,
+        nativeName: `日本語 ${index}`,
       })),
+    );
+
+    expect(stored.map((language) => language.nativeName)).toEqual(
+      Array.from({ length: 25 }, (_, index) => `日本語 ${index}`),
     );
 
     const result = await service.findAll();
     expect(result).toHaveLength(stored.length);
     expect(result).toEqual(
       expect.arrayContaining(
-        stored.map(({ _id, code, name }) => ({
+        stored.map(({ _id, code, name, nativeName }) => ({
           id: _id.toHexString(),
           code,
           name,
+          nativeName,
         })),
       ),
     );

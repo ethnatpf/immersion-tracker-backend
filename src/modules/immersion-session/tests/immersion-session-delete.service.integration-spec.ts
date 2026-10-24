@@ -63,6 +63,7 @@ describe("ImmersionSessionService delete database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Delete session test language",
+      nativeName: "Delete session test language",
     });
     languageId = language._id;
     const content = await contents.create({

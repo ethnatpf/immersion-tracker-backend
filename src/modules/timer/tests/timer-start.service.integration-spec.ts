@@ -61,6 +61,7 @@ describe("TimerService start database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Timer integration test language",
+      nativeName: "Timer integration test language",
     });
     languageId = language._id.toString();
     const [content, secondContent, otherContent] = await contents.create([

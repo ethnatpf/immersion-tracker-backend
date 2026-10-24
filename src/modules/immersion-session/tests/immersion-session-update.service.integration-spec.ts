@@ -63,6 +63,7 @@ describe("ImmersionSessionService update database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Update session test language",
+      nativeName: "Update session test language",
     });
     languageId = language._id;
     const content = await contents.create({

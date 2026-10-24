@@ -62,6 +62,7 @@ describe("ContentService getById database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Content details test language",
+      nativeName: "Content details test language",
     });
     languageId = language._id;
   });

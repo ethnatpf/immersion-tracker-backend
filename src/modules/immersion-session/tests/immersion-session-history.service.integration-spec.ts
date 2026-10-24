@@ -61,6 +61,7 @@ describe("ImmersionSessionService history database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "History test language",
+      nativeName: "History test language",
     });
     languageId = language._id;
   });

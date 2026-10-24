@@ -84,11 +84,13 @@ describe("DashboardService statistics database integration", () => {
         _id: languageId,
         code: `test-${randomUUID()}`,
         name: "Dashboard language",
+        nativeName: "Dashboard language",
       },
       {
         _id: otherLanguageId,
         code: `test-${randomUUID()}`,
         name: "Other language",
+        nativeName: "Other language",
       },
     ]);
   });

@@ -12,6 +12,7 @@ describe("GET /language", () => {
     _id: new Types.ObjectId(),
     code: `code-${index}`,
     name: `Language ${index}`,
+    nativeName: `日本語 ${index}`,
     __v: 0,
   }));
 
@@ -33,22 +34,24 @@ describe("GET /language", () => {
         _id: new Types.ObjectId(),
         code: `code-${index}`,
         name: `Language ${index}`,
+        nativeName: `日本語 ${index}`,
         __v: 0,
       })),
     );
   });
 
-  it("returns all languages with only their string id, code, and name", async () => {
+  it("returns all languages with only their string id, code, name, and native name", async () => {
     const response = await request(app.getHttpServer())
       .get("/language")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(response.body).toEqual(
-      languages.map(({ _id, code, name }) => ({
+      languages.map(({ _id, code, name, nativeName }) => ({
         id: _id.toHexString(),
         code,
         name,
+        nativeName,
       })),
     );
   });

@@ -59,6 +59,7 @@ describe("TimerService getCurrent database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Current timer test language",
+      nativeName: "Current timer test language",
     });
     languageId = language._id;
     const content = await contents.create({

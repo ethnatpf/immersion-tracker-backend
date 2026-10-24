@@ -28,6 +28,9 @@ Seed the database initially from the project root:
 bun seed
 ```
 
+The seed command also updates existing languages by code. Rerun it after updating
+the application to populate `nativeName` on existing language records.
+
 Start the development server with automatic reload:
 
 ```bash

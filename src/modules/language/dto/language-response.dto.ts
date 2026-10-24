@@ -9,4 +9,10 @@ export class LanguageResponseDto {
 
   @ApiProperty({ example: "Japanese" })
   name: string;
+
+  @ApiProperty({
+    description: "Language name in its native language",
+    example: "日本語 (にほんご)",
+  })
+  nativeName: string;
 }

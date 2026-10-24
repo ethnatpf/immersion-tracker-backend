@@ -60,11 +60,17 @@ describe("UserService preferences database integration", () => {
     languages = module.get<Model<Language>>(getModelToken(Language.name));
     await Promise.all([contents.init(), sessions.init()]);
     await languages.insertMany([
-      { _id: languageId, code: `test-${randomUUID()}`, name: "First language" },
+      {
+        _id: languageId,
+        code: `test-${randomUUID()}`,
+        name: "First language",
+        nativeName: "First language",
+      },
       {
         _id: otherLanguageId,
         code: `test-${randomUUID()}`,
         name: "Second language",
+        nativeName: "Second language",
       },
     ]);
   });

@@ -51,6 +51,7 @@ describe("ContentService database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Integration test language",
+      nativeName: "Integration test language",
     });
     languageId = language._id.toString();
     input = {
@@ -191,6 +192,7 @@ describe("ContentService database integration", () => {
       const language = await languages.create({
         code: `test-${randomUUID()}`,
         name: "Second search test language",
+        nativeName: "Second search test language",
       });
       secondLanguageId = language._id.toString();
     });

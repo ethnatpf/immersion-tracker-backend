@@ -66,6 +66,7 @@ describe("ImmersionSessionService create database integration", () => {
     const language = await languages.create({
       code: `test-${randomUUID()}`,
       name: "Session integration test language",
+      nativeName: "Session integration test language",
     });
     languageId = language._id.toString();
     const content = await contents.create({

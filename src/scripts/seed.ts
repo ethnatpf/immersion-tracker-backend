@@ -20,7 +20,11 @@ async function seed() {
         updateOne: {
           filter: { code: language["639-1"] },
           update: {
-            $set: { code: language["639-1"], name: language.name },
+            $set: {
+              code: language["639-1"],
+              name: language.name,
+              nativeName: language.nativeName,
+            },
           },
           upsert: true,
         },
