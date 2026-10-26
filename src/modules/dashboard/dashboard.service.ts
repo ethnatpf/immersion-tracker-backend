@@ -18,6 +18,8 @@ type DailyTotals = {
   audiovisual_time: number;
 };
 
+type ActiveDay = { _id: Date };
+
 function dateKey(date: Dayjs): string {
   return date.format("YYYY-MM-DD");
 }
@@ -121,6 +123,25 @@ export class DashboardService {
       ])
       .exec();
 
+    const streakDays = await this.sessionModel
+      .aggregate<ActiveDay>([
+        {
+          $match: {
+            user_id: userId,
+            language: new Types.ObjectId(input.language),
+            created_at: { $lt: tomorrow.toDate() },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateTrunc: { date: "$created_at", unit: "day", timezone: "UTC" },
+            },
+          },
+        },
+      ])
+      .exec();
+
     const result: DashboardStatisticsResponseDto = {
       total_immersion_time: 0,
       current_streak: 0,
@@ -129,6 +150,17 @@ export class DashboardService {
       average_time: 0,
       breakdown: [],
     };
+    const activeDays = new Set(
+      streakDays.map(({ _id }) => dateKey(dayjs.utc(_id))),
+    );
+    let streakDay = today;
+    if (!activeDays.has(dateKey(today)))
+      streakDay = streakDay.subtract(1, "day");
+    while (activeDays.has(dateKey(streakDay))) {
+      result.current_streak++;
+      streakDay = streakDay.subtract(1, "day");
+    }
+
     const averageStart =
       start ?? (days[0] ? dayjs.utc(days[0]._id) : undefined);
     if (!averageStart) return result;
@@ -153,10 +185,8 @@ export class DashboardService {
       });
     }
 
-    const activeDays = new Set<string>();
     for (const day of days) {
       const date = dayjs.utc(day._id);
-      activeDays.add(dateKey(date));
       result.reading_time += day.reading_time;
       result.audiovisual_time += day.audiovisual_time;
       const bucket = buckets.get(
@@ -164,13 +194,6 @@ export class DashboardService {
       )!;
       bucket.reading_time += day.reading_time;
       bucket.audiovisual_time += day.audiovisual_time;
-    }
-    let streakDay = today;
-    if (!activeDays.has(dateKey(today)))
-      streakDay = streakDay.subtract(1, "day");
-    while (activeDays.has(dateKey(streakDay))) {
-      result.current_streak++;
-      streakDay = streakDay.subtract(1, "day");
     }
     result.total_immersion_time = result.reading_time + result.audiovisual_time;
     result.average_time =

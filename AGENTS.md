@@ -68,6 +68,9 @@
 
 ## Commands and verification
 
+- Always run the relevant tests after making a change, even when the user did
+  not explicitly ask for verification. For documentation-only changes, run the
+  standard or otherwise appropriate test suite if no focused test applies.
 - `npx vitest run` runs unit tests (`*.spec.ts`).
 - `npm run test:http` runs HTTP suites (`*.http-spec.ts`) without a live database.
 - `npm run test:integration` runs database suites (`*.integration-spec.ts`) and

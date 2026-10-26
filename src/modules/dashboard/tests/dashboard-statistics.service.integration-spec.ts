@@ -40,7 +40,8 @@ type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
 // Seconds throughout; UTC dates; weeks start on Monday.
 // Week/month are current calendar periods; year is the trailing calendar year.
 // Averages use elapsed calendar days (including today and days with no sessions).
-// The current streak is capped by the selected range and may end yesterday.
+// The current streak uses all session history for the selected language and may
+// end yesterday.
 describe("DashboardService statistics database integration", () => {
   let module: TestingModule | undefined;
   let service: DashboardService;
@@ -430,10 +431,10 @@ describe("DashboardService statistics database integration", () => {
     },
   );
 
-  it("caps the current streak at the requested range boundary", async () => {
+  it("keeps the full current streak when the selected range starts later", async () => {
     const book = await content();
     for (let day = 10; day <= 15; day++) await session(book, `2026-10-${day}`);
-    expect((await statistics("week")).current_streak).toBe(4);
+    expect((await statistics("week")).current_streak).toBe(6);
     expect((await statistics("month")).current_streak).toBe(6);
   });
 
