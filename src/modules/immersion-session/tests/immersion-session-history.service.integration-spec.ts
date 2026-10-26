@@ -124,6 +124,7 @@ describe("ImmersionSessionService history database integration", () => {
       type: entry.type,
       created_at: stored.created_at.toISOString(),
       duration,
+      progress: { unit: "page", start: 1, end: 10 },
     };
   }
 

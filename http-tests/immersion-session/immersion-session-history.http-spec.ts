@@ -19,6 +19,7 @@ describe("GET /immersion-session", () => {
         type: "book" as const,
         created_at: "2026-10-13T00:00:00.000Z",
         duration: 1200,
+        progress: { unit: "page" as const, start: 1, end: 10 },
       },
     ],
     total: 1,

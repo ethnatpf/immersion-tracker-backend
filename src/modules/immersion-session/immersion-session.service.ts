@@ -16,7 +16,10 @@ import {
   type ImmersionSessionDocument,
 } from "./schemas/immersion-session.schema.js";
 
-type HistorySession = Pick<ImmersionSession, "created_at" | "duration"> & {
+type HistorySession = Pick<
+  ImmersionSession,
+  "created_at" | "duration" | "progress"
+> & {
   _id: Types.ObjectId;
   content: (Pick<Content, "title" | "type"> & { _id: Types.ObjectId }) | null;
 };
@@ -101,7 +104,7 @@ export class ImmersionSessionService {
       sessionQuery.where("content").equals(input.content);
     }
     const candidates = await sessionQuery
-      .select({ content: 1, created_at: 1, duration: 1 })
+      .select({ content: 1, created_at: 1, duration: 1, progress: 1 })
       .sort({ created_at: -1, _id: -1 })
       .populate({
         path: "content",
@@ -127,13 +130,14 @@ export class ImmersionSessionService {
     return {
       items: matches
         .slice((page - 1) * limit, page * limit)
-        .map(({ _id, content, created_at, duration }) => ({
+        .map(({ _id, content, created_at, duration, progress }) => ({
           id: _id.toHexString(),
           content_id: content._id.toHexString(),
           title: content.title,
           type: content.type,
           created_at: created_at.toISOString(),
           duration,
+          ...(progress === undefined ? {} : { progress }),
         })),
       total: matches.length,
       page,

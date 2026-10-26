@@ -1,5 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import type { Content } from "../../content/schemas/content.schema.js";
+import { SessionProgressResponseDto } from "./immersion-session-response.dto.js";
 
 export class SessionHistoryItemResponseDto {
   @ApiProperty({ description: "Immersion session ID" })
@@ -23,6 +24,9 @@ export class SessionHistoryItemResponseDto {
     minimum: 1,
   })
   duration: number;
+
+  @ApiPropertyOptional({ type: SessionProgressResponseDto })
+  progress?: SessionProgressResponseDto;
 }
 
 export class SessionHistoryResponseDto {
