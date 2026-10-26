@@ -111,7 +111,13 @@ export class ImmersionSessionService {
         select: { title: 1, type: 1 },
         match: {
           user_id: userId,
-          ...(input.type !== undefined ? { type: input.type } : {}),
+          ...(input.type === undefined
+            ? {}
+            : {
+                type: {
+                  $in: Array.isArray(input.type) ? input.type : [input.type],
+                },
+              }),
         },
       })
       .lean<HistorySession[]>()

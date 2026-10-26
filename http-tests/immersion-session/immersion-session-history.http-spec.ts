@@ -106,6 +106,14 @@ describe("GET /immersion-session", () => {
     },
   );
 
+  it("accepts multiple content types", async () => {
+    await getHistory().query({ type: ["book", "anime"] }).expect(200);
+    expect(history).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ type: ["book", "anime"] }),
+      userId,
+    );
+  });
+
   it("accepts a title query of 350 characters", async () => {
     await getHistory()
       .query({ q: "a".repeat(350) })
@@ -150,7 +158,6 @@ describe("GET /immersion-session", () => {
     "type=podcast",
     "type=BOOK",
     "type=",
-    "type=book&type=anime",
     `q=${"a".repeat(351)}`,
     "q=forest&q=ocean",
     ...["start_date", "end_date"].flatMap((field) =>

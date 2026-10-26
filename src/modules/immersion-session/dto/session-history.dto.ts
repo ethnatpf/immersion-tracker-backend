@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsDateString,
   IsIn,
@@ -19,8 +20,13 @@ export class SessionHistoryDto extends PaginatedSearchDto {
   @ValidateIf(
     (_object: SessionHistoryDto, value: unknown) => value !== undefined,
   )
-  @IsIn(["anime", "book", "manga", "drama", "video"])
-  type?: Content["type"];
+  @IsIn(["anime", "book", "manga", "drama", "video"], { each: true })
+  @ApiPropertyOptional({
+    enum: ["anime", "book", "manga", "drama", "video"],
+    isArray: true,
+    description: "Filter by one or more content types",
+  })
+  type?: Content["type"] | Content["type"][];
 
   @ValidateIf(
     (_object: SessionHistoryDto, value: unknown) => value !== undefined,

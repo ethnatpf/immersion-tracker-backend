@@ -263,6 +263,19 @@ describe("ImmersionSessionService history database integration", () => {
     },
   );
 
+  it("filters by multiple content types", async () => {
+    const anime = await seedSession(await content("Anime title", "anime"));
+    const book = await seedSession(await content("Book title", "book"));
+    await seedSession(await content("Drama title", "drama"));
+
+    expect(await history({ type: ["anime", "book"] })).toEqual({
+      items: [book, anime],
+      total: 2,
+      page: 1,
+      limit: 20,
+    });
+  });
+
   it("filters by content ID before counting and paginating", async () => {
     const entry = await content();
     const older = await seedSession(entry, "2026-10-11");
