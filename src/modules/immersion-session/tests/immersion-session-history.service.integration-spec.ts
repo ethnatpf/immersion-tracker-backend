@@ -113,7 +113,9 @@ describe("ImmersionSessionService history database integration", () => {
       language: languageId,
       content_type: entry.type,
       user_id: owner,
-      created_at: new Date(`${date}T00:00:00.000Z`),
+      created_at: new Date(
+        date.includes("T") ? date : `${date}T00:00:00.000Z`,
+      ),
       duration,
       progress: { unit: "page", start: 1, end: 10 },
     });
@@ -326,13 +328,17 @@ describe("ImmersionSessionService history database integration", () => {
     const entry = await content();
     const before = await seedSession(entry, "2024-02-28");
     const start = await seedSession(entry, "2024-02-29");
+    const late = await seedSession(entry, "2024-02-29T15:30:00.000Z");
     const end = await seedSession(entry, "2024-03-01");
     const after = await seedSession(entry, "2024-03-02");
     for (const [query, items] of [
-      [{ start_date: "2024-02-29", end_date: "2024-03-01" }, [end, start]],
-      [{ start_date: "2024-02-29", end_date: "2024-02-29" }, [start]],
+      [
+        { start_date: "2024-02-29", end_date: "2024-03-01" },
+        [end, late, start],
+      ],
+      [{ start_date: "2024-02-29", end_date: "2024-02-29" }, [late, start]],
       [{ start_date: "2024-03-01" }, [after, end]],
-      [{ end_date: "2024-02-29" }, [start, before]],
+      [{ end_date: "2024-02-29" }, [late, start, before]],
       [{ start_date: "2025-01-01" }, []],
     ] as const) {
       expect(await history(query)).toEqual({

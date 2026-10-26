@@ -88,12 +88,17 @@ export class ImmersionSessionService {
   ): Promise<SessionHistoryResponseDto> {
     const { page = 1, limit = 20 } = input;
     const query = input.q?.trim().toLowerCase() ?? "";
+    const endDateExclusive =
+      input.end_date === undefined
+        ? undefined
+        : new Date(`${input.end_date}T00:00:00.000Z`);
+    endDateExclusive?.setUTCDate(endDateExclusive.getUTCDate() + 1);
     const dateRange = {
       ...(input.start_date !== undefined
         ? { $gte: new Date(`${input.start_date}T00:00:00.000Z`) }
         : {}),
-      ...(input.end_date !== undefined
-        ? { $lte: new Date(`${input.end_date}T00:00:00.000Z`) }
+      ...(endDateExclusive !== undefined
+        ? { $lt: endDateExclusive }
         : {}),
     };
     const sessionQuery = this.sessionModel.find({
