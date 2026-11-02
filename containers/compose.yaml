@@ -85,7 +85,7 @@ services:
         condition: service_started
 
   mongodb:
-    image: mongo:9.0.2
+    image: mongo:9.0.4
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "127.0.0.1:27017:27017"
