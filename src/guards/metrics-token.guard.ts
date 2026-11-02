@@ -9,8 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import type { Request } from "express";
-
-export const METRICS_AUTHENTICATION = Symbol("metricsAuthentication");
+import { DISABLE_USER_AUTHORIZATION } from "./authorization.guard.js";
 
 @Injectable()
 export class MetricsTokenGuard implements CanActivate {
@@ -41,7 +40,7 @@ export class MetricsTokenGuard implements CanActivate {
 // Keep the JWT exemption and its replacement guard together.
 export function MetricsAuthentication() {
   return applyDecorators(
-    SetMetadata(METRICS_AUTHENTICATION, true),
+    SetMetadata(DISABLE_USER_AUTHORIZATION, true),
     UseGuards(MetricsTokenGuard),
   );
 }

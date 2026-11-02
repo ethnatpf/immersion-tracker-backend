@@ -4,6 +4,7 @@ import { configureApp } from "./configure-app.js";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { configureDayjs } from "./configure-dayjs.js";
 import { requestLogger } from "./logging/request-logger.js";
+import { BACKEND_PORT } from "./constants.js";
 
 configureDayjs();
 
@@ -32,6 +33,6 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 4000);
+  await app.listen(BACKEND_PORT);
 }
 await bootstrap();

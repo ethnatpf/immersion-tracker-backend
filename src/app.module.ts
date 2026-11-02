@@ -9,6 +9,7 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module.js";
 import { UserModule } from "./modules/user/user.module.js";
 import { MetricsModule } from "./modules/metrics/metrics.module.js";
 import { TelemetryShutdownService } from "./telemetry/telemetry-shutdown.service.js";
+import { HealthModule } from "./modules/health/health.module.js";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TelemetryShutdownService } from "./telemetry/telemetry-shutdown.service
     MongooseModule.forRoot(process.env.MONGODB_URL!, {
       dbName: "immersion-tracker",
     }),
+    HealthModule,
     LanguageModule,
     ContentModule,
     TimerModule,

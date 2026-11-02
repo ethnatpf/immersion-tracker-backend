@@ -1,20 +1,23 @@
 import {
+  applyDecorators,
   CanActivate,
   ExecutionContext,
   Injectable,
   InternalServerErrorException,
+  SetMetadata,
   UnauthorizedException,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { Reflector } from "@nestjs/core";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
-import { METRICS_AUTHENTICATION } from "./metrics-token.guard.js";
 import {
   type AuthOptions,
   auth,
   InvalidTokenError,
   UnauthorizedError,
 } from "express-oauth2-jwt-bearer";
+
+export const DISABLE_USER_AUTHORIZATION = Symbol("disableUserAuthorization");
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -24,7 +27,7 @@ export class AuthorizationGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (
-      new Reflector().getAllAndOverride<boolean>(METRICS_AUTHENTICATION, [
+      new Reflector().getAllAndOverride<boolean>(DISABLE_USER_AUTHORIZATION, [
         context.getHandler(),
         context.getClass(),
       ])
@@ -75,4 +78,8 @@ export class AuthorizationGuard implements CanActivate {
 
     return true;
   }
+}
+
+export function DisableUserAuthorization() {
+  return applyDecorators(SetMetadata(DISABLE_USER_AUTHORIZATION, true));
 }
