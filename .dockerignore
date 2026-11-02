@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+!.env.template
+node_modules
+dist
+coverage
+logs
+containers
+designs
+http-tests
+*.tsbuildinfo
