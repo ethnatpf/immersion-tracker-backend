@@ -18,9 +18,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
   imports: [
     ImmersionSessionsModule,
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGODB_URL!, {
-      dbName: "immersion-tracker",
-    }),
+    MongooseModule.forRoot(process.env.MONGODB_URL!),
     HealthModule,
     LanguageModule,
     ContentModule,
