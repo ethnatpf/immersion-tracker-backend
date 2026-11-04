@@ -13,7 +13,7 @@ async function seed() {
   }
 
   try {
-    await mongoose.connect(uri, { dbName: "immersion-tracker" });
+    await mongoose.connect(uri);
     const languageModel = mongoose.model(Language.name, LanguageSchema);
     const result = await languageModel.bulkWrite(
       Object.values(languages).map((language) => ({
