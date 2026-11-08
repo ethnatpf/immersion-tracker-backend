@@ -14,6 +14,7 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
     routeConflictPolicy: {
       duplicate: "error",
       shadow: "warn",

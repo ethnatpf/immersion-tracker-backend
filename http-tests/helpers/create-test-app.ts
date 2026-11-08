@@ -148,7 +148,7 @@ export async function createTestApp(
   });
 
   const module = await builder.compile();
-  const app = module.createNestApplication();
+  const app = module.createNestApplication({ bodyParser: false });
   configureApp(app, { authorization });
   await app.init();
   return app;

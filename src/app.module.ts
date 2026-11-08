@@ -13,6 +13,7 @@ import { MetricsModule } from "./modules/metrics/metrics.module.js";
 import { TelemetryShutdownService } from "./telemetry/telemetry-shutdown.service.js";
 import { HealthModule } from "./modules/health/health.module.js";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { ObservabilityModule } from "./modules/observability/observability.module.js";
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
     DashboardModule,
     UserModule,
     MetricsModule,
+    ObservabilityModule,
     ThrottlerModule.forRoot({
       skipIf: () => process.env.NODE_ENV === "test",
       throttlers: [

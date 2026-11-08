@@ -28,7 +28,7 @@ export function startTelemetry(): void {
       new HttpInstrumentation({
         ignoreIncomingRequestHook(request) {
           const path = (request.url ?? "").split("?", 1)[0];
-          return /^\/(?:(?:metrics|health)\/?|api(?:\/.*|-json|-yaml)?)$/i.test(
+          return /^\/(?:(?:metrics|health)\/?|observability\/faro\/collect\/?|api(?:\/.*|-json|-yaml)?)$/i.test(
             path,
           );
         },

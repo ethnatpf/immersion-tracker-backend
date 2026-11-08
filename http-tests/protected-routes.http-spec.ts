@@ -10,6 +10,7 @@ const protectedRoutes: {
   path: string;
 }[] = [
   { method: "get", path: "/metrics" },
+  { method: "post", path: "/observability/faro/collect" },
   { method: "get", path: "/user/preferences" },
   {
     method: "get",

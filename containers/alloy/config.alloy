@@ -3,6 +3,26 @@ logging {
   format = "json"
 }
 
+faro.receiver "frontend" {
+  output {
+    logs = [loki.write.local.receiver]
+  }
+
+  server {
+    listen_address = "0.0.0.0"
+    listen_port = "12347",
+    max_allowed_payload_size = "2MiB"
+  }
+
+  /* Setup sourcemaps in production
+  sourcemaps {
+    download_from_origins = ["https://immersion-tracker.ethnatpf.com"]
+  }
+  */
+
+  log_format = "json"
+}
+
 otelcol.receiver.otlp "traces" {
   grpc {
     endpoint = "0.0.0.0:4317"
@@ -49,6 +69,7 @@ loki.source.file "backend" {
 loki.process "backend" {
   // Nest CLI compilation and watch messages are not application JSON logs.
   stage.json {
+    // Expression is not to map the log fields, it's to extract fields so that we can use them in following stages.
     expressions = {
       level     = "level",
       timestamp = "timestamp",
