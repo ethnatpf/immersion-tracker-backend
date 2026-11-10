@@ -32,6 +32,11 @@ export function startTelemetry(): void {
             path,
           );
         },
+        requestHook(span, request) {
+          if (!("host" in request) || !request.host) return;
+
+          span.updateName(`${request.method ?? "GET"} ${request.host}`);
+        },
       }),
       new ExpressInstrumentation({
         ignoreLayersType: [
