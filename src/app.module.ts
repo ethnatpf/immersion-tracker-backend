@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { ImmersionSessionsModule } from "./modules/immersion-session/immersion-session.module.js";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -14,6 +14,7 @@ import { TelemetryShutdownService } from "./telemetry/telemetry-shutdown.service
 import { HealthModule } from "./modules/health/health.module.js";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { ObservabilityModule } from "./modules/observability/observability.module.js";
+import { ServerExceptionLoggingFilter } from "./filters/server-exception-logging.filter.js";
 
 @Module({
   imports: [
@@ -41,6 +42,10 @@ import { ObservabilityModule } from "./modules/observability/observability.modul
   controllers: [],
   providers: [
     TelemetryShutdownService,
+    {
+      provide: APP_FILTER,
+      useClass: ServerExceptionLoggingFilter,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

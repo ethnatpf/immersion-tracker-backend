@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { type INestApplication, Logger } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import request from "supertest";
-import { trace, TraceFlags } from "@opentelemetry/api";
+import { SpanStatusCode, trace, TraceFlags } from "@opentelemetry/api";
 import { LanguageService } from "../../src/modules/language/language.service.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
 import { createTestApp } from "../helpers/create-test-app.js";
@@ -204,6 +204,78 @@ describe("Request logging", () => {
         completions().find((record) => record.requestId === id)?.trace_id,
       ).toBe(traceIds[index]);
     }
+  });
+
+  it("logs server errors thrown as HttpExceptions", async () => {
+    const span = trace.wrapSpanContext({
+      traceId: "33333333333333333333333333333333",
+      spanId: "1234567890123456",
+      traceFlags: TraceFlags.SAMPLED,
+    });
+    const recorded = vi.spyOn(span, "recordException");
+    const status = vi.spyOn(span, "setStatus");
+    vi.spyOn(trace, "getActiveSpan").mockReturnValue(span);
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () => new Response(null, { status: 503 }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .post("/observability/faro/collect")
+      .set("Authorization", `Bearer ${fixture.createToken()}`)
+      .send({ meta: {}, events: [] })
+      .expect(502);
+
+    const errors = records.filter(
+      (record) =>
+        record.level === "error" &&
+        record.requestId === response.headers["x-request-id"],
+    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      context: "ExceptionsHandler",
+      message: "The Faro receiver rejected the payload",
+    });
+    expect(recorded).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        message: "The Faro receiver rejected the payload",
+      }),
+    );
+    expect(status).toHaveBeenCalledExactlyOnceWith({
+      code: SpanStatusCode.ERROR,
+      message: "The Faro receiver rejected the payload",
+    });
+  });
+
+  it("records client exceptions on the span without error logging", async () => {
+    const span = trace.wrapSpanContext({
+      traceId: "44444444444444444444444444444444",
+      spanId: "1234567890123456",
+      traceFlags: TraceFlags.SAMPLED,
+    });
+    const recorded = vi.spyOn(span, "recordException");
+    const status = vi.spyOn(span, "setStatus");
+    vi.spyOn(trace, "getActiveSpan").mockReturnValue(span);
+
+    const response = await request(app.getHttpServer())
+      .post("/observability/faro/collect")
+      .set("Authorization", `Bearer ${fixture.createToken()}`)
+      .send({})
+      .expect(400);
+
+    expect(recorded).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ message: "Invalid Faro payload" }),
+    );
+    expect(status).toHaveBeenCalledExactlyOnceWith({
+      code: SpanStatusCode.ERROR,
+      message: "Invalid Faro payload",
+    });
+    expect(
+      records.filter(
+        (record) =>
+          record.level === "error" &&
+          record.requestId === response.headers["x-request-id"],
+      ),
+    ).toHaveLength(0);
   });
 
   it.each([
