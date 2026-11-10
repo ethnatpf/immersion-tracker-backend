@@ -18,6 +18,8 @@ loki.relabel "faro_logs" {
 }
 
 faro.receiver "integrations_app_agent_receiver" {
+    log_format = "json"
+
     server {
         listen_address           = "0.0.0.0"
         listen_port              = 12347
@@ -33,7 +35,7 @@ faro.receiver "integrations_app_agent_receiver" {
     }
 
     // Empty values copy the corresponding Faro payload fields into labels.
-    extra_log_labels = { "kind" = "", "app_name" = "" }
+    extra_log_labels = { "kind" = "", "app_name" = "", "type" = "" }
 
     output {
         logs   = [loki.relabel.faro_logs.receiver]
