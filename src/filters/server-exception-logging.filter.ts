@@ -1,8 +1,4 @@
-import {
-  Catch,
-  HttpException,
-  type ArgumentsHost,
-} from "@nestjs/common";
+import { Catch, HttpException, type ArgumentsHost } from "@nestjs/common";
 import { BaseExceptionFilter, HttpAdapterHost } from "@nestjs/core";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
 import { requestLogger } from "../logging/request-logger.js";
