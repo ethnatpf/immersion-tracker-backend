@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import { NotFoundException } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
@@ -114,18 +113,14 @@ describe("TimerService getCurrent database integration", () => {
     });
   });
 
-  it("returns not found when the user has no active timer", async () => {
-    await expect(service.getCurrent(userId)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+  it("returns null when the user has no active timer", async () => {
+    await expect(service.getCurrent(userId)).resolves.toBeNull();
     expect(await timers.countDocuments(owners)).toBe(0);
   });
 
-  it("returns not found rather than exposing another user's active timer", async () => {
+  it("returns null rather than exposing another user's active timer", async () => {
     await seedTimer(otherUserId);
-    await expect(service.getCurrent(userId)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.getCurrent(userId)).resolves.toBeNull();
     expect(await timers.countDocuments({ user_id: otherUserId })).toBe(1);
   });
 

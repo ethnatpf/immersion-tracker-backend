@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { NotFoundException, type INestApplication } from "@nestjs/common";
+import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { TimerService } from "~/modules/timer/timer.service.js";
 import { createAuthFixture } from "../helpers/auth.fixture.js";
@@ -45,10 +45,9 @@ describe("GET /timer", () => {
     expect(getCurrent).toHaveBeenCalledExactlyOnceWith(fixture.userId);
   });
 
-  it("returns 404 when the authenticated user has no active timer", async () => {
-    getCurrent.mockRejectedValueOnce(new NotFoundException("No active timer"));
-    const response = await get().expect(404);
-    expect(response.body).toMatchObject({ statusCode: 404 });
+  it("returns null when the authenticated user has no active timer", async () => {
+    getCurrent.mockResolvedValueOnce(null);
+    await get().expect(200);
     expect(getCurrent).toHaveBeenCalledExactlyOnceWith(fixture.userId);
   });
 

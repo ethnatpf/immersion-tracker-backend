@@ -23,10 +23,10 @@ export class TimerController {
 
   @Get()
   @ApiOperation({ operationId: "timerCurrent" })
-  @ApiOkResponse({ type: CurrentTimerResponseDto })
+  @ApiOkResponse({ type: CurrentTimerResponseDto, nullable: true })
   getCurrent(
     @CurrentUserId() userId: string,
-  ): Promise<CurrentTimerResponseDto> {
+  ): Promise<CurrentTimerResponseDto | null> {
     return this.timerService.getCurrent(userId);
   }
 

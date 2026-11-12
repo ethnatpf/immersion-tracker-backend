@@ -24,7 +24,9 @@ export class TimerService {
     private readonly sessionModel: Model<ImmersionSession>,
   ) {}
 
-  async getCurrent(userId: string): Promise<CurrentTimerResponseDto> {
+  async getCurrent(
+    userId: string,
+  ): Promise<CurrentTimerResponseDto | null> {
     const timer = await this.timerModel
       .findOne({ user_id: userId })
       .select({ content: 1, started_at: 1 })
@@ -38,8 +40,8 @@ export class TimerService {
       })
       .lean()
       .exec();
-    if (!timer || !timer.content)
-      throw new NotFoundException("No active timer");
+    if (!timer) return null;
+    if (!timer.content) throw new NotFoundException("No active timer");
 
     return {
       id: timer._id.toHexString(),
