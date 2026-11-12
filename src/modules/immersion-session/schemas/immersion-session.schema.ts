@@ -52,11 +52,7 @@ export class ImmersionSession {
   @Prop({
     required: true,
     type: SchemaTypes.Date,
-    default: () => {
-      const day = new Date();
-      day.setUTCHours(0, 0, 0, 0);
-      return day;
-    },
+    default: () => new Date(),
     index: true,
   })
   created_at: Date;

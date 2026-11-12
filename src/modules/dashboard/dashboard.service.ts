@@ -24,14 +24,22 @@ function dateKey(date: Dayjs): string {
   return date.format("YYYY-MM-DD");
 }
 
-function rangeStart(range: DashboardRange, today: Dayjs): Dayjs | undefined {
+function calendarDate(date: Dayjs, timezone: string): Dayjs {
+  return dayjs.tz(date.format("YYYY-MM-DD"), timezone).startOf("day");
+}
+
+function rangeStart(
+  range: DashboardRange,
+  today: Dayjs,
+  timezone: string,
+): Dayjs | undefined {
   switch (range) {
     case "week":
       return today.startOf("isoWeek");
     case "month":
       return today.startOf("month");
     case "year":
-      return today.subtract(1, "year");
+      return calendarDate(today.subtract(1, "year"), timezone);
     case "total":
       return undefined;
   }
@@ -54,16 +62,27 @@ function bucketStart(range: DashboardRange, date: Dayjs, start: Dayjs): Dayjs {
   return bucket.isBefore(start) ? start : bucket;
 }
 
-function nextBucket(range: DashboardRange, date: Dayjs): Dayjs {
+function nextBucket(
+  range: DashboardRange,
+  date: Dayjs,
+  timezone: string,
+): Dayjs {
   switch (range) {
     case "week":
-      return date.add(1, "day");
+      return calendarDate(date.add(1, "day"), timezone);
     case "month":
-      return date.startOf("isoWeek").add(1, "week");
+      return calendarDate(date.startOf("isoWeek").add(1, "week"), timezone);
     case "year":
-      return date.startOf("month").add(1, "month");
+      return dayjs
+        .tz(
+          date.startOf("month").add(1, "month").format("YYYY-MM-01"),
+          timezone,
+        )
+        .startOf("day");
     case "total":
-      return date.startOf("year").add(1, "year");
+      return dayjs
+        .tz(date.startOf("year").add(1, "year").format("YYYY-01-01"), timezone)
+        .startOf("day");
   }
 }
 
@@ -78,9 +97,10 @@ export class DashboardService {
     input: DashboardStatisticsDto,
     userId: string,
   ): Promise<DashboardStatisticsResponseDto> {
-    const today = dayjs.utc().startOf("day");
-    const tomorrow = today.add(1, "day");
-    const start = rangeStart(input.range, today);
+    const now = dayjs.utc();
+    const today = now.tz(input.timezone).startOf("day");
+    const tomorrow = calendarDate(today.add(1, "day"), input.timezone);
+    const start = rangeStart(input.range, today, input.timezone);
     // Return at most one row per day rather than loading individual sessions.
     const days = await this.sessionModel
       .aggregate<DailyTotals>([
@@ -91,13 +111,18 @@ export class DashboardService {
             created_at: {
               ...(start ? { $gte: start.toDate() } : {}),
               $lt: tomorrow.toDate(),
+              $lte: now.toDate(),
             },
           },
         },
         {
           $group: {
             _id: {
-              $dateTrunc: { date: "$created_at", unit: "day", timezone: "UTC" },
+              $dateTrunc: {
+                date: "$created_at",
+                unit: "day",
+                timezone: input.timezone,
+              },
             },
             reading_time: {
               $sum: {
@@ -129,13 +154,17 @@ export class DashboardService {
           $match: {
             user_id: userId,
             language: new Types.ObjectId(input.language),
-            created_at: { $lt: tomorrow.toDate() },
+            created_at: { $lte: now.toDate() },
           },
         },
         {
           $group: {
             _id: {
-              $dateTrunc: { date: "$created_at", unit: "day", timezone: "UTC" },
+              $dateTrunc: {
+                date: "$created_at",
+                unit: "day",
+                timezone: input.timezone,
+              },
             },
           },
         },
@@ -151,7 +180,7 @@ export class DashboardService {
       breakdown: [],
     };
     const activeDays = new Set(
-      streakDays.map(({ _id }) => dateKey(dayjs.utc(_id))),
+      streakDays.map(({ _id }) => dateKey(dayjs.utc(_id).tz(input.timezone))),
     );
     let streakDay = today;
     if (!activeDays.has(dateKey(today)))
@@ -162,20 +191,27 @@ export class DashboardService {
     }
 
     const averageStart =
-      start ?? (days[0] ? dayjs.utc(days[0]._id) : undefined);
+      start ??
+      (days[0] ? dayjs.utc(days[0]._id).tz(input.timezone) : undefined);
     if (!averageStart) return result;
 
     let chartEnd = tomorrow;
-    if (input.range === "week") chartEnd = averageStart.add(1, "week");
+    if (input.range === "week")
+      chartEnd = calendarDate(averageStart.add(1, "week"), input.timezone);
     if (input.range === "month")
-      chartEnd = today.startOf("month").add(1, "month");
+      chartEnd = dayjs
+        .tz(
+          today.startOf("month").add(1, "month").format("YYYY-MM-01"),
+          input.timezone,
+        )
+        .startOf("day");
 
     const buckets = new Map<string, DashboardBucketResponseDto>();
 
     for (
       let date = bucketStart(input.range, averageStart, averageStart);
       date.isBefore(chartEnd);
-      date = nextBucket(input.range, date)
+      date = nextBucket(input.range, date, input.timezone)
     ) {
       const key = dateKey(date);
       buckets.set(key, {
@@ -186,7 +222,7 @@ export class DashboardService {
     }
 
     for (const day of days) {
-      const date = dayjs.utc(day._id);
+      const date = dayjs.utc(day._id).tz(input.timezone);
       result.reading_time += day.reading_time;
       result.audiovisual_time += day.audiovisual_time;
       const bucket = buckets.get(

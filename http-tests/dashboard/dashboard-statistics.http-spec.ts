@@ -46,11 +46,20 @@ describe("GET /dashboard/statistics", () => {
       .mockResolvedValueOnce(result);
     try {
       const response = await statistics()
-        .query({ range: "week", language, user_id: "auth0|another-user" })
+        .query({
+          range: "week",
+          language,
+          timezone: "America/Toronto",
+          user_id: "auth0|another-user",
+        })
         .expect(200);
       expect(response.body).toEqual(result);
       expect(spy).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ range: "week", language }),
+        expect.objectContaining({
+          range: "week",
+          language,
+          timezone: "America/Toronto",
+        }),
         userId,
       );
     } finally {
@@ -62,7 +71,7 @@ describe("GET /dashboard/statistics", () => {
     "accepts required language and range %s and returns statistics in seconds",
     async (range) => {
       const response = await statistics()
-        .query({ range, language })
+        .query({ range, language, timezone: "UTC" })
         .expect(200);
       expect(response.body).toEqual({
         total_immersion_time: 0,
@@ -86,11 +95,16 @@ describe("GET /dashboard/statistics", () => {
     "",
     `language=${language}`,
     "range=week",
+    `range=week&language=${language}`,
     ...["", "daily", "YEAR", "all"].map(
       (range) => `range=${range}&language=${language}`,
     ),
     ...["", "ja", "not-an-id", "507f1f77bcf86cd79943901z"].map(
       (value) => `range=week&language=${value}`,
+    ),
+    ...["", "Mars/OlympusMons", "-05:00"].map(
+      (timezone) =>
+        `range=week&language=${language}&timezone=${encodeURIComponent(timezone)}`,
     ),
     `range=week&range=month&language=${language}`,
     `range=week&language=${language}&language=507f1f77bcf86cd799439012`,
@@ -100,7 +114,11 @@ describe("GET /dashboard/statistics", () => {
 
   it("returns zero statistics for a valid language ID with no matching sessions", async () => {
     const response = await statistics()
-      .query({ range: "total", language: "507f1f77bcf86cd799439099" })
+      .query({
+        range: "total",
+        language: "507f1f77bcf86cd799439099",
+        timezone: "UTC",
+      })
       .expect(200);
     expect(response.body).toEqual({
       total_immersion_time: 0,

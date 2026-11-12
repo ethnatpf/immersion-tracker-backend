@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class DashboardBucketResponseDto {
   @ApiProperty({
-    description: "Bucket start date in UTC",
+    description: "Bucket start date in the requested timezone",
     format: "date",
     example: "2026-10-12",
   })

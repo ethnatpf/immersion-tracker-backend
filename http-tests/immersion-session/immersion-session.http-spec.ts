@@ -196,20 +196,30 @@ describe("POST /immersion-session", () => {
     await post({ ...input, progress: value }).expect(400);
   });
 
-  describe("calendar dates", () => {
+  describe("session timestamps", () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ["Date"] });
       vi.setSystemTime(new Date("2026-10-13T12:34:56.789Z"));
       token = createToken();
     });
 
-    it.each(["2026-10-13", "2020-01-02", "2024-02-29"])(
-      "accepts %s and returns midnight UTC",
-      async (created_at) => {
+    it.each([
+      ["2026-10-13T12:34:56.789Z", "2026-10-13T12:34:56.789Z"],
+      ["2020-01-02T03:00:00-05:00", "2020-01-02T08:00:00.000Z"],
+      ["2024-02-29T23:59:59+01:00", "2024-02-29T22:59:59.000Z"],
+      ["2030-01-01T00:00:00Z", "2030-01-01T00:00:00.000Z"],
+    ])(
+      "accepts %s and returns the same instant in UTC",
+      async (created_at, expected) => {
         const response = await post({ ...input, created_at }).expect(201);
-        expect(response.body.created_at).toBe(`${created_at}T00:00:00.000Z`);
+        expect(response.body.created_at).toBe(expected);
       },
     );
+
+    it("defaults an omitted timestamp to now", async () => {
+      const response = await post(input).expect(201);
+      expect(response.body.created_at).toBe("2026-10-13T12:34:56.789Z");
+    });
 
     it.each(
       [
@@ -219,7 +229,6 @@ describe("POST /immersion-session", () => {
         true,
         [],
         {},
-        "2026-10-14",
         "2026-02-29",
         "2024-02-30",
         "2026-04-31",
@@ -230,25 +239,17 @@ describe("POST /immersion-session", () => {
         "13/10/2026",
         "not-a-date",
         " 2026-10-13 ",
-        "2026-10-13T00:00:00Z",
-        "2026-10-13T00:00:00-04:00",
+        "2026-10-13T00:00:00",
+        "2026-10-13",
         "2026-10-13T12:00:00",
       ].map((created_at) => ({ created_at })),
     )("rejects invalid date $created_at", async ({ created_at }) => {
       await post({ ...input, created_at }).expect(400);
     });
 
-    it.each(["2026-10-13T00:00:00.001Z", "2026-10-13T23:59:59.999Z"])(
-      "uses the UTC calendar day at %s",
-      async (now) => {
-        vi.setSystemTime(new Date(now));
-        token = createToken();
-        const response = await post(input).expect(201);
-        expect(response.body.created_at).toBe("2026-10-13T00:00:00.000Z");
-        await post({ ...input, created_at: "2026-10-13" }).expect(201);
-        await post({ ...input, created_at: "2026-10-14" }).expect(400);
-      },
-    );
+    it("accepts a future timestamp", async () => {
+      await post({ ...input, created_at: "2030-01-01T00:00:00Z" }).expect(201);
+    });
   });
 
   it.each([

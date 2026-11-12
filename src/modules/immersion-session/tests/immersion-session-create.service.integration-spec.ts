@@ -136,7 +136,7 @@ describe("ImmersionSessionService create database integration", () => {
   });
 
   it.each(["2026-10-13T00:00:00.001Z", "2026-10-13T23:59:59.999Z"])(
-    "automatically persists the UTC day at midnight when created at %s",
+    "defaults created_at to the current instant when created at %s",
     async (now) => {
       // Leave timers used by MongoDB running normally.
       vi.useFakeTimers({ toFake: ["Date"] });
@@ -144,20 +144,20 @@ describe("ImmersionSessionService create database integration", () => {
       const created = await service.create(input, userId);
       const stored = await sessions.findById(created._id).lean().exec();
       expect(stored?.created_at).toBeInstanceOf(Date);
-      expect(stored?.created_at.toISOString()).toBe("2026-10-13T00:00:00.000Z");
+      expect(stored?.created_at.toISOString()).toBe(now);
     },
   );
 
-  it("persists a supplied past day instead of the automatic day", async () => {
+  it("persists a supplied timestamp as the same UTC instant", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-13T12:34:56.789Z"));
     const created = await service.create(
-      { ...input, created_at: "2024-02-29" },
+      { ...input, created_at: "2024-02-29T23:30:00-05:00" },
       userId,
     );
     const stored = await sessions.findById(created._id).lean().exec();
     expect(stored?.created_at).toBeInstanceOf(Date);
-    expect(stored?.created_at.toISOString()).toBe("2024-02-29T00:00:00.000Z");
+    expect(stored?.created_at.toISOString()).toBe("2024-03-01T04:30:00.000Z");
   });
 
   describe.each(["episode", "page"] as const)("%s progress", (unit) => {

@@ -52,7 +52,7 @@ export class ImmersionSessionService {
 
     const changes: Partial<ImmersionSession> = {};
     if (input.created_at !== undefined)
-      changes.created_at = new Date(`${input.created_at}T00:00:00.000Z`);
+      changes.created_at = new Date(input.created_at);
     if (input.duration !== undefined) changes.duration = input.duration;
     if (input.progress !== undefined) {
       const unit = input.progress.unit ?? session.progress?.unit;
@@ -97,9 +97,7 @@ export class ImmersionSessionService {
       ...(input.start_date !== undefined
         ? { $gte: new Date(`${input.start_date}T00:00:00.000Z`) }
         : {}),
-      ...(endDateExclusive !== undefined
-        ? { $lt: endDateExclusive }
-        : {}),
+      ...(endDateExclusive !== undefined ? { $lt: endDateExclusive } : {}),
     };
     const sessionQuery = this.sessionModel.find({
       user_id: userId,
@@ -173,9 +171,7 @@ export class ImmersionSessionService {
       duration: input.duration,
       user_id: userId,
       created_at:
-        input.created_at === undefined
-          ? undefined
-          : new Date(`${input.created_at}T00:00:00.000Z`),
+        input.created_at === undefined ? undefined : new Date(input.created_at),
       progress: input.progress,
     }).save();
   }

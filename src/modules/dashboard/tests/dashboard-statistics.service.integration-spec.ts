@@ -37,7 +37,7 @@ type StoredSession = Omit<ImmersionSession, "content" | "language"> & {
   language: Types.ObjectId;
 };
 
-// Seconds throughout; UTC dates; weeks start on Monday.
+// Seconds throughout; UTC dates by default; weeks start on Monday.
 // Week/month are current calendar periods; year is the trailing calendar year.
 // Averages use elapsed calendar days (including today and days with no sessions).
 // The current streak uses all session history for the selected language and may
@@ -125,9 +125,10 @@ describe("DashboardService statistics database integration", () => {
     range: Range = "total",
     language = languageId,
     owner = userId,
+    timezone = "UTC",
   ): Promise<Statistics> {
     return service.statistics(
-      { range, language: language.toHexString() },
+      { range, language: language.toHexString(), timezone },
       owner,
     );
   }
@@ -161,7 +162,7 @@ describe("DashboardService statistics database integration", () => {
       language: entry.language,
       content_type: entry.type,
       user_id: owner,
-      created_at: new Date(`${date}T00:00:00.000Z`),
+      created_at: new Date(date.includes("T") ? date : `${date}T00:00:00.000Z`),
       duration,
     });
   }
@@ -443,5 +444,57 @@ describe("DashboardService statistics database integration", () => {
     await session(await content(), "2026-10-15", 120);
     expect((await statistics("week")).current_streak).toBe(1);
     expect((await statistics("week")).average_time).toBe(30);
+  });
+
+  it("uses the requested IANA timezone for day buckets and streaks", async () => {
+    vi.setSystemTime(new Date("2026-10-15T05:00:00.000Z")); // 1 a.m. in Toronto
+    const book = await content();
+    await session(book, "2026-10-15T02:00:00.000Z", 100); // Oct 14 in Toronto
+    await session(book, "2026-10-15T04:00:00.000Z", 200); // Oct 15 in Toronto
+
+    const result = await statistics(
+      "week",
+      languageId,
+      userId,
+      "America/Toronto",
+    );
+    expect(result.current_streak).toBe(2);
+    expect(result.breakdown).toEqual([
+      bucket("2026-10-12"),
+      bucket("2026-10-13"),
+      bucket("2026-10-14", 100),
+      bucket("2026-10-15", 200),
+      bucket("2026-10-16"),
+      bucket("2026-10-17"),
+      bucket("2026-10-18"),
+    ]);
+  });
+
+  it("excludes sessions later than now, even when they are dated today", async () => {
+    const book = await content();
+    await session(book, "2026-10-15T11:59:59.999Z", 100);
+    await session(book, "2026-10-15T12:00:00.001Z", 900);
+
+    const result = await statistics("week");
+    expect(result.total_immersion_time).toBe(100);
+    expect(result.current_streak).toBe(1);
+    expect(result.breakdown).toContainEqual(bucket("2026-10-15", 100));
+  });
+
+  it("groups both occurrences of the repeated local hour into one DST calendar day", async () => {
+    vi.setSystemTime(new Date("2026-11-02T05:00:00.000Z")); // midnight in Toronto
+    const book = await content();
+    await session(book, "2026-11-01T05:30:00.000Z", 100); // 1:30 a.m. EDT
+    await session(book, "2026-11-01T06:30:00.000Z", 200); // 1:30 a.m. EST
+
+    const result = await statistics(
+      "month",
+      languageId,
+      userId,
+      "America/Toronto",
+    );
+    expect(result.total_immersion_time).toBe(300);
+    expect(result.current_streak).toBe(1);
+    expect(result.breakdown).toContainEqual(bucket("2026-11-01", 300));
   });
 });

@@ -174,7 +174,7 @@ describe("TimerService stop database integration", () => {
     const stored = await sessions.findById(created._id).lean().exec();
     expect(stored).toMatchObject({ user_id: userId, duration: 1200 });
     expect(stored?.content.toString()).toBe(contentId.toString());
-    expect(stored?.created_at.toISOString()).toBe("2026-10-15T00:00:00.000Z");
+    expect(stored?.created_at.toISOString()).toBe(stoppedAt.toISOString());
     expect(await sessions.countDocuments(owners)).toBe(1);
     expect(await timers.findById(timer._id).lean().exec()).toBeNull();
     expect(await contents.findById(contentId).lean().exec()).toEqual(

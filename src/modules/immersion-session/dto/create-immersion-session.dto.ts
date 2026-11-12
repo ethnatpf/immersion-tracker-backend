@@ -11,6 +11,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from "class-validator";
+import { FULL_DATE_TIME_WITH_TIMEZONE_REGEX } from "~/constants.js";
 import type { SessionProgress } from "../schemas/immersion-session.schema.js";
 
 export class SessionProgressDto implements SessionProgress {
@@ -55,16 +56,7 @@ export class CreateImmersionSessionDto {
   @ValidateIf(
     (_object: CreateImmersionSessionDto, value: unknown) => value !== undefined,
   )
-  @Matches(/^\d{4}-\d{2}-\d{2}$/u)
+  @Matches(FULL_DATE_TIME_WITH_TIMEZONE_REGEX)
   @IsDateString({ strict: true })
-  @ValidateBy({
-    name: "isNotFutureDay",
-    validator: {
-      validate: (value: unknown) =>
-        typeof value === "string" &&
-        value <= new Date().toISOString().slice(0, 10),
-      defaultMessage: () => "created_at must not be a future date",
-    },
-  })
   created_at?: string;
 }

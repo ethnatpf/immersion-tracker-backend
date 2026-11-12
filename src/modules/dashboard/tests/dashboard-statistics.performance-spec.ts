@@ -124,7 +124,7 @@ describe("DashboardService statistics performance", () => {
     owner = userId,
   ): Promise<Statistics> {
     return service.statistics(
-      { range, language: language.toHexString() },
+      { range, language: language.toHexString(), timezone: "UTC" },
       owner,
     );
   }

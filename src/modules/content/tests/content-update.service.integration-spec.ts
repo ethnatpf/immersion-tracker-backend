@@ -161,12 +161,14 @@ describe("ContentService update database integration", () => {
       [otherLanguageId, 120],
     ] as const) {
       expect(
-        await module!
-          .get(DashboardService)
-          .statistics(
-            { range: "total", language: language.toHexString() },
-            userId,
-          ),
+        await module!.get(DashboardService).statistics(
+          {
+            range: "total",
+            language: language.toHexString(),
+            timezone: "UTC",
+          },
+          userId,
+        ),
       ).toMatchObject({ total_immersion_time: total });
     }
   });

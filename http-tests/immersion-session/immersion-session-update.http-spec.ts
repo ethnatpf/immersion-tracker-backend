@@ -89,16 +89,16 @@ describe("PATCH /immersion-session/:id", () => {
   });
 
   it.each([
-    { created_at: "2024-02-29" },
+    { created_at: "2024-02-29T23:30:00-05:00" },
     { duration: 1 },
     { duration: 1800 },
-    { created_at: "2026-10-15", duration: 1800 },
+    { created_at: "2026-10-15T10:30:00Z", duration: 1800 },
     { progress: { start: 1, end: 1 } },
     { progress: { start: 1, end: 3 } },
     { progress: { unit: "episode", start: 1, end: 3 } },
     { progress: { unit: "page", start: 1, end: 3 } },
     {
-      created_at: "2024-02-29",
+      created_at: "2024-02-29T23:30:00-05:00",
       duration: 1800,
       progress: { start: 1, end: 3 },
     },
@@ -218,8 +218,8 @@ describe("PATCH /immersion-session/:id", () => {
       "15/10/2026",
       "not-a-date",
       " 2026-10-15 ",
-      "2026-10-15T00:00:00Z",
-      "2026-10-15T00:00:00-04:00",
+      "2026-10-15T00:00:00",
+      "2026-10-15",
     ].map((created_at) => ({ created_at })),
   )(
     "rejects invalid date $created_at before invoking the service",
