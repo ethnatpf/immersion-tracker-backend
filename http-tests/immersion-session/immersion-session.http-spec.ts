@@ -207,7 +207,6 @@ describe("POST /immersion-session", () => {
       ["2026-10-13T12:34:56.789Z", "2026-10-13T12:34:56.789Z"],
       ["2020-01-02T03:00:00-05:00", "2020-01-02T08:00:00.000Z"],
       ["2024-02-29T23:59:59+01:00", "2024-02-29T22:59:59.000Z"],
-      ["2030-01-01T00:00:00Z", "2030-01-01T00:00:00.000Z"],
     ])(
       "accepts %s and returns the same instant in UTC",
       async (created_at, expected) => {
@@ -247,8 +246,14 @@ describe("POST /immersion-session", () => {
       await post({ ...input, created_at }).expect(400);
     });
 
-    it("accepts a future timestamp", async () => {
-      await post({ ...input, created_at: "2030-01-01T00:00:00Z" }).expect(201);
+    it("rejects a timestamp later than now", async () => {
+      const response = await post({
+        ...input,
+        created_at: "2026-10-13T12:34:56.790Z",
+      }).expect(400);
+      expect(response.body.message).toBe(
+        "created_at must not be in the future",
+      );
     });
   });
 

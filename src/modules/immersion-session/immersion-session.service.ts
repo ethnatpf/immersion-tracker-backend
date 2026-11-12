@@ -158,6 +158,13 @@ export class ImmersionSessionService {
     input: CreateImmersionSessionDto,
     userId: string,
   ): Promise<ImmersionSessionDocument> {
+    if (
+      input.created_at !== undefined &&
+      new Date(input.created_at).getTime() > Date.now()
+    ) {
+      throw new BadRequestException("created_at must not be in the future");
+    }
+
     const content = await this.contentModel
       .findOne({ _id: input.content, user_id: userId })
       .select({ language: 1, type: 1 })

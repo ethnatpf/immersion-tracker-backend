@@ -160,6 +160,19 @@ describe("ImmersionSessionService create database integration", () => {
     expect(stored?.created_at.toISOString()).toBe("2024-03-01T04:30:00.000Z");
   });
 
+  it("rejects a supplied timestamp later than now", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-13T12:34:56.789Z"));
+
+    await expect(
+      service.create(
+        { ...input, created_at: "2026-10-13T12:34:56.790Z" },
+        userId,
+      ),
+    ).rejects.toThrow("created_at must not be in the future");
+    expect(await sessions.countDocuments(owners)).toBe(0);
+  });
+
   describe.each(["episode", "page"] as const)("%s progress", (unit) => {
     it.each([1, 3])(
       "persists progress with start 1 and end %s",
