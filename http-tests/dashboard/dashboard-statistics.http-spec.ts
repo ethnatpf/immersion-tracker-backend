@@ -36,9 +36,15 @@ describe("GET /dashboard/statistics", () => {
       current_streak: 2,
       reading_time: 120,
       audiovisual_time: 180,
+      audio_time: 0,
       average_time: 75,
       breakdown: [
-        { start_date: "2026-10-12", reading_time: 120, audiovisual_time: 180 },
+        {
+          start_date: "2026-10-12",
+          reading_time: 120,
+          audiovisual_time: 180,
+          audio_time: 0,
+        },
       ],
     };
     const spy = vi
@@ -78,6 +84,7 @@ describe("GET /dashboard/statistics", () => {
         current_streak: 0,
         reading_time: 0,
         audiovisual_time: 0,
+        audio_time: 0,
         average_time: 0,
         breakdown: expect.any(Array),
       });
@@ -86,6 +93,7 @@ describe("GET /dashboard/statistics", () => {
           start_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/u),
           reading_time: 0,
           audiovisual_time: 0,
+          audio_time: 0,
         });
       }
     },
@@ -125,6 +133,7 @@ describe("GET /dashboard/statistics", () => {
       current_streak: 0,
       reading_time: 0,
       audiovisual_time: 0,
+      audio_time: 0,
       average_time: 0,
       breakdown: [],
     });

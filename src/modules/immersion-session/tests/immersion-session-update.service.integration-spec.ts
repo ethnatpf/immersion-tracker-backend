@@ -170,7 +170,9 @@ describe("ImmersionSessionService update database integration", () => {
     expect(await sessions.countDocuments(owners)).toBe(3);
   });
 
-  describe.each(["episode", "page"] as const)("%s progress", (unit) => {
+  describe.each(["episode", "page", "chapter"] as const)(
+    "%s progress",
+    (unit) => {
     it.each([
       { start: 1, end: 1 },
       { start: 1, end: 3 },
@@ -198,7 +200,8 @@ describe("ImmersionSessionService update database integration", () => {
         );
       },
     );
-  });
+    },
+  );
 
   it("persists date, duration, and progress together on the same session", async () => {
     const target = await seedSession();
@@ -301,7 +304,7 @@ describe("ImmersionSessionService update database integration", () => {
     expect(await sessions.findById(target._id).lean().exec()).toEqual(before);
   });
 
-  it.each(["episode", "page"] as const)(
+  it.each(["episode", "page", "chapter"] as const)(
     "adds %s progress to a session without prior progress",
     async (unit) => {
       const target = await sessions.create({

@@ -16,6 +16,7 @@ type DailyTotals = {
   _id: Date;
   reading_time: number;
   audiovisual_time: number;
+  audio_time: number;
 };
 
 type ActiveDay = { _id: Date };
@@ -136,7 +137,23 @@ export class DashboardService {
             audiovisual_time: {
               $sum: {
                 $cond: [
-                  { $in: ["$content_type", ["anime", "drama", "video"]] },
+                  {
+                    $in: ["$content_type", ["anime", "drama", "video", "game"]],
+                  },
+                  "$duration",
+                  0,
+                ],
+              },
+            },
+            audio_time: {
+              $sum: {
+                $cond: [
+                  {
+                    $in: [
+                      "$content_type",
+                      ["podcast", "radio", "audiobook", "audio"],
+                    ],
+                  },
                   "$duration",
                   0,
                 ],
@@ -176,6 +193,7 @@ export class DashboardService {
       current_streak: 0,
       reading_time: 0,
       audiovisual_time: 0,
+      audio_time: 0,
       average_time: 0,
       breakdown: [],
     };
@@ -218,6 +236,7 @@ export class DashboardService {
         start_date: key,
         reading_time: 0,
         audiovisual_time: 0,
+        audio_time: 0,
       });
     }
 
@@ -225,13 +244,16 @@ export class DashboardService {
       const date = dayjs.utc(day._id).tz(input.timezone);
       result.reading_time += day.reading_time;
       result.audiovisual_time += day.audiovisual_time;
+      result.audio_time += day.audio_time;
       const bucket = buckets.get(
         dateKey(bucketStart(input.range, date, averageStart)),
       )!;
       bucket.reading_time += day.reading_time;
       bucket.audiovisual_time += day.audiovisual_time;
+      bucket.audio_time += day.audio_time;
     }
-    result.total_immersion_time = result.reading_time + result.audiovisual_time;
+    result.total_immersion_time =
+      result.reading_time + result.audiovisual_time + result.audio_time;
     result.average_time =
       result.total_immersion_time / (today.diff(averageStart, "day") + 1);
     result.breakdown = [...buckets.values()];

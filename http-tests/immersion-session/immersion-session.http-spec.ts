@@ -156,7 +156,7 @@ describe("POST /immersion-session", () => {
     },
   );
 
-  it.each(["episode", "page"])(
+  it.each(["episode", "page", "chapter"])(
     "accepts %s progress with equal or ranged bounds",
     async (unit) => {
       for (const end of [1, 3]) {
@@ -180,7 +180,7 @@ describe("POST /immersion-session", () => {
       { start: 1, end: 3 },
       { unit: "episode", end: 3 },
       { unit: "episode", start: 1 },
-      ...[null, "chapter", "EPISODE", 1, [], {}].map((unit) => ({
+      ...[null, "EPISODE", 1, [], {}].map((unit) => ({
         ...progress,
         unit,
       })),

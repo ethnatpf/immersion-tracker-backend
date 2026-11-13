@@ -174,7 +174,9 @@ describe("ImmersionSessionService create database integration", () => {
     expect(await sessions.countDocuments(owners)).toBe(0);
   });
 
-  describe.each(["episode", "page"] as const)("%s progress", (unit) => {
+  describe.each(["episode", "page", "chapter"] as const)(
+    "%s progress",
+    (unit) => {
     it.each([1, 3])(
       "persists progress with start 1 and end %s",
       async (end) => {
@@ -223,7 +225,8 @@ describe("ImmersionSessionService create database integration", () => {
         );
       }
     });
-  });
+    },
+  );
 
   it("rejects nonexistent content without inserting a session", async () => {
     const content = new Types.ObjectId().toHexString();

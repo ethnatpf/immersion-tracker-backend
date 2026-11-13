@@ -12,10 +12,13 @@ import {
   ValidateNested,
 } from "class-validator";
 import { FULL_DATE_TIME_WITH_TIMEZONE_REGEX } from "~/constants.js";
-import type { SessionProgress } from "../schemas/immersion-session.schema.js";
+import {
+  SESSION_PROGRESS_UNITS,
+  type SessionProgress,
+} from "../schemas/immersion-session.schema.js";
 
 export class SessionProgressDto implements SessionProgress {
-  @IsIn(["episode", "page"])
+  @IsIn(SESSION_PROGRESS_UNITS)
   unit: SessionProgress["unit"];
 
   @IsInt()

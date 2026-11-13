@@ -9,6 +9,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from "class-validator";
+import { SESSION_PROGRESS_UNITS } from "../schemas/immersion-session.schema.js";
 import {
   CreateImmersionSessionDto,
   SessionProgressDto,
@@ -24,7 +25,7 @@ export class UpdateSessionProgressDto extends PickType(SessionProgressDto, [
   "end",
 ] as const) {
   @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
-  @IsIn(["episode", "page"])
+  @IsIn(SESSION_PROGRESS_UNITS)
   unit?: SessionProgressDto["unit"];
 }
 

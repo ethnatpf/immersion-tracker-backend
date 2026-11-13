@@ -13,6 +13,9 @@ export class DashboardBucketResponseDto {
 
   @ApiProperty({ description: "Audiovisual duration in seconds" })
   audiovisual_time: number;
+
+  @ApiProperty({ description: "Audio duration in seconds" })
+  audio_time: number;
 }
 
 export class DashboardStatisticsResponseDto {
@@ -27,6 +30,9 @@ export class DashboardStatisticsResponseDto {
 
   @ApiProperty({ description: "Audiovisual duration in seconds" })
   audiovisual_time: number;
+
+  @ApiProperty({ description: "Audio duration in seconds" })
+  audio_time: number;
 
   @ApiProperty({ description: "Daily average immersion duration in seconds" })
   average_time: number;

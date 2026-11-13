@@ -97,6 +97,7 @@ describe("PATCH /immersion-session/:id", () => {
     { progress: { start: 1, end: 3 } },
     { progress: { unit: "episode", start: 1, end: 3 } },
     { progress: { unit: "page", start: 1, end: 3 } },
+    { progress: { unit: "chapter", start: 1, end: 3 } },
     {
       created_at: "2024-02-29T23:30:00-05:00",
       duration: 1800,
@@ -185,7 +186,7 @@ describe("PATCH /immersion-session/:id", () => {
         })),
       ),
       { start: 3, end: 2 },
-      ...[null, "chapter", "EPISODE", 1, true, [], {}].map((unit) => ({
+      ...[null, "EPISODE", 1, true, [], {}].map((unit) => ({
         unit,
         start: 1,
         end: 3,

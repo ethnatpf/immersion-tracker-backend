@@ -5,10 +5,12 @@ import {
   type Content,
 } from "~/modules/content/schemas/content.schema.js";
 
+export const SESSION_PROGRESS_UNITS = ["episode", "page", "chapter"] as const;
+
 @Schema({ _id: false })
 export class SessionProgress {
-  @Prop({ type: String, enum: ["episode", "page"], required: true })
-  unit: "episode" | "page";
+  @Prop({ type: String, enum: SESSION_PROGRESS_UNITS, required: true })
+  unit: (typeof SESSION_PROGRESS_UNITS)[number];
 
   // Inclusive endpoints; a single episode or page has equal start and end.
   @Prop({

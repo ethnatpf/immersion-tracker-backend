@@ -24,11 +24,13 @@ type Statistics = {
   current_streak: number;
   reading_time: number;
   audiovisual_time: number;
+  audio_time: number;
   average_time: number;
   breakdown: {
     start_date: string;
     reading_time: number;
     audiovisual_time: number;
+    audio_time: number;
   }[];
 };
 type StoredContent = Omit<Content, "language"> & { language: Types.ObjectId };
@@ -167,8 +169,13 @@ describe("DashboardService statistics database integration", () => {
     });
   }
 
-  function bucket(start_date: string, reading_time = 0, audiovisual_time = 0) {
-    return { start_date, reading_time, audiovisual_time };
+  function bucket(
+    start_date: string,
+    reading_time = 0,
+    audiovisual_time = 0,
+    audio_time = 0,
+  ) {
+    return { start_date, reading_time, audiovisual_time, audio_time };
   }
 
   it("uses session language and type instead of referenced content metadata", async () => {
@@ -184,6 +191,7 @@ describe("DashboardService statistics database integration", () => {
     expect(await statistics()).toMatchObject({
       reading_time: 120,
       audiovisual_time: 0,
+      audio_time: 0,
     });
   });
 
@@ -193,18 +201,20 @@ describe("DashboardService statistics database integration", () => {
       current_streak: 0,
       reading_time: 0,
       audiovisual_time: 0,
+      audio_time: 0,
       average_time: 0,
       breakdown: [],
     });
   });
 
-  it("sums repeated sessions in seconds and groups book/manga versus anime/drama/video", async () => {
+  it("groups reading and audiovisual content types and sums repeated sessions", async () => {
     for (const [type, duration] of [
       ["book", 101],
       ["manga", 202],
       ["anime", 303],
       ["drama", 404],
       ["video", 505],
+      ["game", 606],
     ] as const) {
       await session(await content(type), "2026-10-15", duration);
     }
@@ -212,12 +222,34 @@ describe("DashboardService statistics database integration", () => {
     await session(book, "2026-10-15", 60);
     await session(book, "2026-10-15", 120);
     expect(await statistics()).toEqual({
-      total_immersion_time: 1695,
+      total_immersion_time: 2301,
       current_streak: 1,
       reading_time: 483,
-      audiovisual_time: 1212,
-      average_time: 1695,
-      breakdown: [bucket("2026-01-01", 483, 1212)],
+      audiovisual_time: 1818,
+      audio_time: 0,
+      average_time: 2301,
+      breakdown: [bucket("2026-01-01", 483, 1818)],
+    });
+  });
+
+  it("includes podcast, radio, audiobook, and audio durations in audio time", async () => {
+    for (const [type, duration] of [
+      ["podcast", 11],
+      ["radio", 22],
+      ["audiobook", 33],
+      ["audio", 44],
+    ] as const) {
+      await session(await content(type), "2026-10-15", duration);
+    }
+
+    expect(await statistics()).toEqual({
+      total_immersion_time: 110,
+      current_streak: 1,
+      reading_time: 0,
+      audiovisual_time: 0,
+      audio_time: 110,
+      average_time: 110,
+      breakdown: [bucket("2026-01-01", 0, 0, 110)],
     });
   });
 
@@ -237,6 +269,7 @@ describe("DashboardService statistics database integration", () => {
       current_streak: 1,
       reading_time: 100,
       audiovisual_time: 0,
+      audio_time: 0,
       average_time: 100,
       breakdown: [bucket("2026-01-01", 100)],
     });
@@ -284,6 +317,7 @@ describe("DashboardService statistics database integration", () => {
       current_streak: 1,
       reading_time: 180,
       audiovisual_time: 240,
+      audio_time: 0,
       average_time: 105, // 420 / 4 elapsed days, including the empty Tuesday/Wednesday
       breakdown: [
         bucket("2026-10-12", 120),
@@ -389,6 +423,7 @@ describe("DashboardService statistics database integration", () => {
         current_streak: 0,
         reading_time: 0,
         audiovisual_time: 0,
+        audio_time: 0,
         average_time: 0,
         breakdown: expect.any(Array),
       });

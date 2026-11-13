@@ -1,9 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CONTENT_TYPES } from "../../content/schemas/content.schema.js";
+import { SESSION_PROGRESS_UNITS } from "../schemas/immersion-session.schema.js";
 
 export class SessionProgressResponseDto {
-  @ApiProperty({ enum: ["episode", "page"] })
-  unit: "episode" | "page";
+  @ApiProperty({ enum: SESSION_PROGRESS_UNITS })
+  unit: (typeof SESSION_PROGRESS_UNITS)[number];
 
   @ApiProperty({ type: "integer", minimum: 1, description: "Inclusive start" })
   start: number;
