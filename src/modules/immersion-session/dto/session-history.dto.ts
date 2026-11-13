@@ -8,7 +8,10 @@ import {
   ValidateIf,
 } from "class-validator";
 import { PaginatedSearchDto } from "../../../dto/paginated-search.dto.js";
-import type { Content } from "../../content/schemas/content.schema.js";
+import {
+  CONTENT_TYPES,
+  type Content,
+} from "../../content/schemas/content.schema.js";
 
 export class SessionHistoryDto extends PaginatedSearchDto {
   @ValidateIf(
@@ -20,9 +23,9 @@ export class SessionHistoryDto extends PaginatedSearchDto {
   @ValidateIf(
     (_object: SessionHistoryDto, value: unknown) => value !== undefined,
   )
-  @IsIn(["anime", "book", "manga", "drama", "video"], { each: true })
+  @IsIn(CONTENT_TYPES, { each: true })
   @ApiPropertyOptional({
-    enum: ["anime", "book", "manga", "drama", "video"],
+    enum: CONTENT_TYPES,
     isArray: true,
     description: "Filter by one or more content types",
   })

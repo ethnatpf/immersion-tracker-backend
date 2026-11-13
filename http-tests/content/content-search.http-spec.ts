@@ -91,7 +91,18 @@ describe("GET /content/search", () => {
       .expect(200);
   });
 
-  it.each(["anime", "book", "manga", "drama", "video"])(
+  it.each([
+    "anime",
+    "book",
+    "manga",
+    "drama",
+    "video",
+    "game",
+    "podcast",
+    "radio",
+    "audiobook",
+    "audio",
+  ])(
     "accepts content type %s",
     async (type) => {
       await getSearch().query({ type }).expect(200);
@@ -139,7 +150,7 @@ describe("GET /content/search", () => {
     "language=507f1f77bcf86cd7994390110",
     "language=507f1f77bcf86cd79943901z",
     "language=",
-    "type=podcast",
+    "type=podcastx",
     "type=BOOK",
     "type=movie",
     "type=",

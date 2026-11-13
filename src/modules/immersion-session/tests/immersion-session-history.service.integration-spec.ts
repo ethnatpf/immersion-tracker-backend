@@ -9,6 +9,7 @@ import { ImmersionSession } from "../schemas/immersion-session.schema.js";
 import {
   Content,
   ContentSchema,
+  CONTENT_TYPES,
 } from "../../content/schemas/content.schema.js";
 import {
   Language,
@@ -249,7 +250,7 @@ describe("ImmersionSessionService history database integration", () => {
     },
   );
 
-  it.each(["anime", "book", "manga", "drama", "video"] as const)(
+  it.each(CONTENT_TYPES)(
     "filters by content type %s",
     async (type) => {
       const expected = await seedSession(await content("Forest", type));

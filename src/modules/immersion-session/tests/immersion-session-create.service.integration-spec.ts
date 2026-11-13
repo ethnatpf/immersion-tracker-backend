@@ -11,6 +11,7 @@ import type { CreateImmersionSessionDto } from "../dto/create-immersion-session.
 import {
   Content,
   ContentSchema,
+  CONTENT_TYPES,
 } from "../../content/schemas/content.schema.js";
 import {
   Language,
@@ -104,7 +105,7 @@ describe("ImmersionSessionService create database integration", () => {
     }
   });
 
-  it.each(["anime", "book", "manga", "drama", "video"] as const)(
+  it.each(CONTENT_TYPES)(
     "copies language and %s type from owned content",
     async (type) => {
       const entry = await contents.create({

@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
-import { Content } from "~/modules/content/schemas/content.schema.js";
+import {
+  CONTENT_TYPES,
+  type Content,
+} from "~/modules/content/schemas/content.schema.js";
 
 @Schema({ _id: false })
 export class SessionProgress {
@@ -65,7 +68,7 @@ export class ImmersionSession {
 
   @Prop({
     type: String,
-    enum: ["anime", "book", "manga", "drama", "video"],
+    enum: CONTENT_TYPES,
     required: true,
   })
   content_type: Content["type"];

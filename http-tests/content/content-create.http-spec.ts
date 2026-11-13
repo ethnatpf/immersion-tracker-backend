@@ -165,7 +165,7 @@ describe("POST /content", () => {
     expect(response.body.message).toBe("Language does not exist");
   });
 
-  it.each(["podcast", "BOOK", "movie"])(
+  it.each(["podcastx", "BOOK", "movie"])(
     "rejects unsupported content type %s",
     async (type) => {
       await postContent()
@@ -196,7 +196,18 @@ describe("POST /content", () => {
       .expect(400);
   });
 
-  it.each(["anime", "book", "manga", "drama", "video"])(
+  it.each([
+    "anime",
+    "book",
+    "manga",
+    "drama",
+    "video",
+    "game",
+    "podcast",
+    "radio",
+    "audiobook",
+    "audio",
+  ])(
     "accepts supported type %s with the optional URL omitted",
     async (type) => {
       await postContent()

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { CONTENT_TYPES } from "../../content/schemas/content.schema.js";
 import type { Content } from "../../content/schemas/content.schema.js";
 import { SessionProgressResponseDto } from "./immersion-session-response.dto.js";
 
@@ -12,7 +13,7 @@ export class SessionHistoryItemResponseDto {
   @ApiProperty()
   title: string;
 
-  @ApiProperty({ enum: ["anime", "book", "manga", "drama", "video"] })
+  @ApiProperty({ enum: CONTENT_TYPES })
   type: Content["type"];
 
   @ApiProperty({ format: "date-time", description: "Session date in UTC" })

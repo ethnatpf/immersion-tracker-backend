@@ -1,5 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import type { Content } from "../../content/schemas/content.schema.js";
+import {
+  CONTENT_TYPES,
+  type Content,
+} from "../../content/schemas/content.schema.js";
 
 export class TimerResponseDto {
   @ApiProperty({ description: "Timer ID" })
@@ -25,7 +28,7 @@ export class CurrentTimerResponseDto {
   @ApiProperty({ description: "Content title" })
   title: string;
 
-  @ApiProperty({ enum: ["anime", "book", "manga", "drama", "video"] })
+  @ApiProperty({ enum: CONTENT_TYPES })
   type: Content["type"];
 
   @ApiProperty({ format: "date-time", description: "Timer start time in UTC" })

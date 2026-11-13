@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { CONTENT_TYPES } from "../../content/schemas/content.schema.js";
 
 export class SessionProgressResponseDto {
   @ApiProperty({ enum: ["episode", "page"] })
@@ -21,8 +22,8 @@ export class ImmersionSessionResponseDto {
   @ApiProperty({ description: "Language ID" })
   language: string;
 
-  @ApiProperty({ enum: ["anime", "book", "manga", "drama", "video"] })
-  content_type: "anime" | "book" | "manga" | "drama" | "video";
+  @ApiProperty({ enum: CONTENT_TYPES })
+  content_type: (typeof CONTENT_TYPES)[number];
 
   @ApiProperty({ description: "External authentication provider user ID" })
   user_id: string;

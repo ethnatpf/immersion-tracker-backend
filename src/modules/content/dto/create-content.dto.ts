@@ -7,7 +7,7 @@ import {
   MaxLength,
   ValidateIf,
 } from "class-validator";
-import type { Content } from "../schemas/content.schema.js";
+import { CONTENT_TYPES, type Content } from "../schemas/content.schema.js";
 
 export class CreateContentDto {
   @IsString()
@@ -16,7 +16,7 @@ export class CreateContentDto {
   title: string;
 
   @IsString()
-  @IsIn(["anime", "book", "manga", "drama", "video"])
+  @IsIn(CONTENT_TYPES)
   type: Content["type"];
 
   @IsString()

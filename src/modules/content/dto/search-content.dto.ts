@@ -1,6 +1,6 @@
 import { IsIn, IsMongoId, ValidateIf } from "class-validator";
 import { PaginatedSearchDto } from "../../../dto/paginated-search.dto.js";
-import type { Content } from "../schemas/content.schema.js";
+import { CONTENT_TYPES, type Content } from "../schemas/content.schema.js";
 
 export class SearchContentDto extends PaginatedSearchDto {
   @ValidateIf(
@@ -12,6 +12,6 @@ export class SearchContentDto extends PaginatedSearchDto {
   @ValidateIf(
     (_object: SearchContentDto, value: unknown) => value !== undefined,
   )
-  @IsIn(["anime", "book", "manga", "drama", "video"])
+  @IsIn(CONTENT_TYPES)
   type?: Content["type"];
 }

@@ -2,14 +2,27 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes } from "mongoose";
 import { Language } from "~/modules/language/schemas/language.schema.js";
 
+export const CONTENT_TYPES = [
+  "anime",
+  "book",
+  "manga",
+  "drama",
+  "video",
+  "game",
+  "podcast",
+  "radio",
+  "audiobook",
+  "audio",
+] as const;
+
 // Represents an immersion content (a book, an anime, etc)
 @Schema({ toJSON: { versionKey: false } })
 export class Content {
   @Prop({ required: true })
   title: string;
 
-  @Prop({ required: true })
-  type: "anime" | "book" | "manga" | "drama" | "video";
+  @Prop({ type: String, enum: CONTENT_TYPES, required: true })
+  type: (typeof CONTENT_TYPES)[number];
 
   // ID of the user inside the external authentication provider (Auth0)
   @Prop({ required: true })

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import type { Content } from "../schemas/content.schema.js";
+import { CONTENT_TYPES, type Content } from "../schemas/content.schema.js";
 
 export class ContentResponseDto {
   @ApiProperty({ description: "Content ID" })
@@ -8,7 +8,7 @@ export class ContentResponseDto {
   @ApiProperty()
   title: string;
 
-  @ApiProperty({ enum: ["anime", "book", "manga", "drama", "video"] })
+  @ApiProperty({ enum: CONTENT_TYPES })
   type: Content["type"];
 
   @ApiProperty({ description: "External authentication provider user ID" })

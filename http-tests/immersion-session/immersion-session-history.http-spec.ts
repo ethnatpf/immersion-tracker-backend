@@ -95,7 +95,18 @@ describe("GET /immersion-session", () => {
     );
   });
 
-  it.each(["anime", "book", "manga", "drama", "video"])(
+  it.each([
+    "anime",
+    "book",
+    "manga",
+    "drama",
+    "video",
+    "game",
+    "podcast",
+    "radio",
+    "audiobook",
+    "audio",
+  ])(
     "accepts type %s",
     async (type) => {
       await getHistory().query({ type }).expect(200);
@@ -155,7 +166,7 @@ describe("GET /immersion-session", () => {
       "507f1f77bcf86cd79943901z",
     ].map((value) => `content=${value}`),
     "content=507f1f77bcf86cd799439011&content=507f1f77bcf86cd799439012",
-    "type=podcast",
+    "type=podcastx",
     "type=BOOK",
     "type=",
     `q=${"a".repeat(351)}`,
