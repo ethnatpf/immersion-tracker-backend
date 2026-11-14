@@ -1,5 +1,7 @@
 import { Type } from "class-transformer";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDateString,
   IsIn,
   IsInt,
@@ -38,6 +40,14 @@ export class SessionProgressDto implements SessionProgress {
     },
   })
   end: number;
+
+  @ApiPropertyOptional({
+    description:
+      "Whether the session duration was automatically calculated from this progress",
+  })
+  @ValidateIf((_object: SessionProgressDto, value: unknown) => value !== undefined)
+  @IsBoolean()
+  auto?: boolean;
 }
 
 export class CreateImmersionSessionDto {
