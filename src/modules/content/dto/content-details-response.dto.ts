@@ -21,6 +21,9 @@ export class ContentLastImmersionSessionResponseDto {
 }
 
 export class ContentDetailsResponseDto extends ContentSearchItemResponseDto {
+  @ApiPropertyOptional({ description: "Reference link to the content" })
+  url?: string;
+
   @ApiProperty({ description: "Total immersion duration in seconds" })
   totalTimeSpent: number;
 

@@ -32,7 +32,7 @@ export class ContentService {
   ): Promise<ContentDetailsResponseDto> {
     const content = await this.contentModel
       .findOne({ _id: id, user_id: userId })
-      .select({ title: 1, type: 1 })
+      .select({ title: 1, type: 1, url: 1 })
       .lean()
       .exec();
     if (!content) throw new NotFoundException("Content not found");
@@ -62,6 +62,7 @@ export class ContentService {
       id: content._id.toHexString(),
       title: content.title,
       type: content.type,
+      ...(content.url !== undefined ? { url: content.url } : {}),
       totalTimeSpent: summary?.totalTimeSpent ?? 0,
       lastImmersionSession: last
         ? {

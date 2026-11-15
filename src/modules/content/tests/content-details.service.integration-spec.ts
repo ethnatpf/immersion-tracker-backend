@@ -140,6 +140,7 @@ describe("ContentService getById database integration", () => {
       id: content._id.toHexString(),
       title: content.title,
       type: "book",
+      url: "https://example.com/content",
       totalTimeSpent: 1837,
       lastImmersionSession: latest,
     });
@@ -151,6 +152,7 @@ describe("ContentService getById database integration", () => {
         id: content._id.toHexString(),
         title: "Empty history",
         type: "book",
+        url: "https://example.com/content",
         totalTimeSpent: 0,
         lastImmersionSession: null,
       });
