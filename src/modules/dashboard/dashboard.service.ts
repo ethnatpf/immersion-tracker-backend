@@ -52,8 +52,7 @@ function bucketStart(range: DashboardRange, date: Dayjs, start: Dayjs): Dayjs {
     case "week":
       return date;
     case "month":
-      bucket = date.startOf("isoWeek");
-      break;
+      return date.startOf("isoWeek");
     case "year":
       bucket = date.startOf("month");
       break;
@@ -102,6 +101,8 @@ export class DashboardService {
     const today = now.tz(input.timezone).startOf("day");
     const tomorrow = calendarDate(today.add(1, "day"), input.timezone);
     const start = rangeStart(input.range, today, input.timezone);
+    const queryStart =
+      input.range === "month" && start ? start.startOf("isoWeek") : start;
     // Return at most one row per day rather than loading individual sessions.
     const days = await this.sessionModel
       .aggregate<DailyTotals>([
@@ -110,7 +111,7 @@ export class DashboardService {
             user_id: userId,
             language: new Types.ObjectId(input.language),
             created_at: {
-              ...(start ? { $gte: start.toDate() } : {}),
+              ...(queryStart ? { $gte: queryStart.toDate() } : {}),
               $lt: tomorrow.toDate(),
               $lte: now.toDate(),
             },
@@ -216,18 +217,26 @@ export class DashboardService {
     let chartEnd = tomorrow;
     if (input.range === "week")
       chartEnd = calendarDate(averageStart.add(1, "week"), input.timezone);
-    if (input.range === "month")
-      chartEnd = dayjs
-        .tz(
-          today.startOf("month").add(1, "month").format("YYYY-MM-01"),
-          input.timezone,
-        )
-        .startOf("day");
+    const monthEnd =
+      input.range === "month"
+        ? dayjs
+            .tz(
+              today.startOf("month").add(1, "month").format("YYYY-MM-01"),
+              input.timezone,
+            )
+            .startOf("day")
+        : undefined;
+    if (monthEnd)
+      chartEnd = monthEnd.startOf("isoWeek").add(1, "week");
 
     const buckets = new Map<string, DashboardBucketResponseDto>();
 
     for (
-      let date = bucketStart(input.range, averageStart, averageStart);
+      let date = bucketStart(
+        input.range,
+        input.range === "month" ? (queryStart ?? averageStart) : averageStart,
+        averageStart,
+      );
       date.isBefore(chartEnd);
       date = nextBucket(input.range, date, input.timezone)
     ) {
@@ -242,15 +251,20 @@ export class DashboardService {
 
     for (const day of days) {
       const date = dayjs.utc(day._id).tz(input.timezone);
-      result.reading_time += day.reading_time;
-      result.audiovisual_time += day.audiovisual_time;
-      result.audio_time += day.audio_time;
       const bucket = buckets.get(
         dateKey(bucketStart(input.range, date, averageStart)),
       )!;
       bucket.reading_time += day.reading_time;
       bucket.audiovisual_time += day.audiovisual_time;
       bucket.audio_time += day.audio_time;
+      if (
+        input.range !== "month" ||
+        (start && monthEnd && !date.isBefore(start) && date.isBefore(monthEnd))
+      ) {
+        result.reading_time += day.reading_time;
+        result.audiovisual_time += day.audiovisual_time;
+        result.audio_time += day.audio_time;
+      }
     }
     result.total_immersion_time =
       result.reading_time + result.audiovisual_time + result.audio_time;
