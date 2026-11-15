@@ -301,7 +301,7 @@ describe("DashboardService statistics database integration", () => {
           (sum, item) => sum + item.reading_time + item.audiovisual_time,
           0,
         ),
-      ).toBe(180);
+      ).toBe(range === "month" ? 1180 : 180);
     },
   );
 
@@ -330,7 +330,7 @@ describe("DashboardService statistics database integration", () => {
     });
   });
 
-  it("groups the current month into Monday-start weeks clipped to the month", async () => {
+  it("groups the current month into complete Monday-start weeks while keeping summaries month-scoped", async () => {
     const book = await content();
     const video = await content("video");
     await session(book, "2026-09-30", 900);
@@ -342,7 +342,7 @@ describe("DashboardService statistics database integration", () => {
     expect(result.total_immersion_time).toBe(1500);
     expect(result.average_time).toBe(100); // 15 elapsed days
     expect(result.breakdown).toEqual([
-      bucket("2026-10-01", 150, 300),
+      bucket("2026-09-28", 1050, 300),
       bucket("2026-10-05", 450),
       bucket("2026-10-12", 0, 600),
       bucket("2026-10-19"),
@@ -378,16 +378,18 @@ describe("DashboardService statistics database integration", () => {
     ]);
   });
 
-  it("includes all six partial or full weeks when a month starts on Sunday", async () => {
+  it("includes the full leading and trailing weeks when the month starts and ends midweek", async () => {
     vi.setSystemTime(new Date("2026-03-31T12:00:00.000Z"));
     const book = await content();
+    await session(book, "2026-02-28", 900);
     await session(book, "2026-03-01", 31);
     await session(book, "2026-03-31", 62);
+    await session(book, "2026-04-01", 1200);
     const result = await statistics("month");
     expect(result.total_immersion_time).toBe(93);
     expect(result.average_time).toBe(3);
     expect(result.breakdown).toEqual([
-      bucket("2026-03-01", 31),
+      bucket("2026-02-23", 931),
       bucket("2026-03-02"),
       bucket("2026-03-09"),
       bucket("2026-03-16"),
@@ -529,6 +531,6 @@ describe("DashboardService statistics database integration", () => {
     );
     expect(result.total_immersion_time).toBe(300);
     expect(result.current_streak).toBe(1);
-    expect(result.breakdown).toContainEqual(bucket("2026-11-01", 300));
+    expect(result.breakdown).toContainEqual(bucket("2026-10-26", 300));
   });
 });
