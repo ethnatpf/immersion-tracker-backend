@@ -17,9 +17,6 @@ export class ContentResponseDto {
   @ApiProperty({ description: "Language ID" })
   language: string;
 
-  @ApiProperty()
-  completed: boolean;
-
   @ApiPropertyOptional({ format: "uri" })
   url?: string;
 }

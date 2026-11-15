@@ -145,7 +145,6 @@ describe("DashboardService statistics database integration", () => {
       type,
       language,
       user_id: owner,
-      completed: false,
     });
   }
 

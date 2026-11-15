@@ -139,7 +139,6 @@ describe("DashboardService statistics performance", () => {
       type,
       language,
       user_id: owner,
-      completed: false,
     });
   }
 

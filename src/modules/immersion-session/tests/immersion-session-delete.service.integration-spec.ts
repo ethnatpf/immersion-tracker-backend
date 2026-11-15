@@ -71,7 +71,6 @@ describe("ImmersionSessionService delete database integration", () => {
       type: "book",
       language: languageId,
       user_id: userId,
-      completed: false,
     });
     contentId = content._id;
     const otherContent = await contents.create({
@@ -79,7 +78,6 @@ describe("ImmersionSessionService delete database integration", () => {
       type: "book",
       language: languageId,
       user_id: otherUserId,
-      completed: false,
     });
     otherContentId = otherContent._id;
   });

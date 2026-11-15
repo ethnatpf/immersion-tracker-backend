@@ -103,7 +103,6 @@ describe("UserService preferences database integration", () => {
       type: "book",
       language,
       user_id: owner,
-      completed: false,
     });
   }
 

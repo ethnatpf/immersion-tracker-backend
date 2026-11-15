@@ -86,14 +86,12 @@ describe("ContentService getById database integration", () => {
 
   function seedContent(
     title = "The Forest Chronicles",
-    completed = false,
     owner = userId,
     type: Content["type"] = "book",
   ) {
     return contents.create({
       title,
       type,
-      completed,
       user_id: owner,
       language: languageId,
       url: "https://example.com/content",
@@ -142,33 +140,28 @@ describe("ContentService getById database integration", () => {
       id: content._id.toHexString(),
       title: content.title,
       type: "book",
-      completed: false,
       totalTimeSpent: 1837,
       lastImmersionSession: latest,
     });
   });
 
-  it.each([false, true])(
-    "returns completion status %s with zero seconds and null session for empty history",
-    async (completed) => {
-      const content = await seedContent("Empty history", completed);
+  it("returns zero seconds and null session for empty history", async () => {
+      const content = await seedContent("Empty history");
       expect(await service.getById(content._id.toHexString(), userId)).toEqual({
         id: content._id.toHexString(),
         title: "Empty history",
         type: "book",
-        completed,
         totalTimeSpent: 0,
         lastImmersionSession: null,
       });
-    },
-  );
+    });
 
   it("excludes other content and other users' sessions from the total and latest session", async () => {
     const content = await seedContent();
     const own = await seedSession(content._id, "2026-10-10", 61);
     const sibling = await seedContent("Another owned book");
     await seedSession(sibling._id, "2026-10-14", 300);
-    const other = await seedContent("Other user's book", false, otherUserId);
+    const other = await seedContent("Other user's book", otherUserId);
     await seedSession(other._id, "2026-10-14", 400, { owner: otherUserId });
     // Even an inconsistent foreign-owned session referencing our content is private.
     await seedSession(content._id, "2026-10-15", 9000, { owner: otherUserId });
@@ -193,7 +186,7 @@ describe("ContentService getById database integration", () => {
   });
 
   it("rejects another user's content while allowing its actual owner to read it", async () => {
-    const content = await seedContent("Private book", true, otherUserId);
+    const content = await seedContent("Private book", otherUserId);
     await seedSession(content._id, "2026-10-13", 1200, { owner: otherUserId });
     // Having a session referencing foreign content does not grant access to it.
     await seedSession(content._id, "2026-10-14", 600);
@@ -204,7 +197,6 @@ describe("ContentService getById database integration", () => {
       await service.getById(content._id.toHexString(), otherUserId),
     ).toMatchObject({
       title: "Private book",
-      completed: true,
       totalTimeSpent: 1200,
     });
   });
@@ -228,7 +220,7 @@ describe("ContentService getById database integration", () => {
   });
 
   it("preserves episode progress for anime content", async () => {
-    const content = await seedContent("Forest anime", false, userId, "anime");
+    const content = await seedContent("Forest anime", userId, "anime");
     const latest = await seedSession(content._id, "2026-10-13", 1440, {
       progress: { unit: "episode", start: 2, end: 2 },
     });
@@ -249,7 +241,6 @@ describe("ContentService getById database integration", () => {
     async ({ type, unit }) => {
       const content = await seedContent(
         "Same-day progress",
-        false,
         userId,
         type,
       );

@@ -66,7 +66,6 @@ describe("TimerService getCurrent database integration", () => {
       type: "book",
       user_id: userId,
       language: languageId,
-      completed: false,
     });
     contentId = content._id;
     const otherContent = await contents.create({
@@ -74,7 +73,6 @@ describe("TimerService getCurrent database integration", () => {
       type: "anime",
       user_id: otherUserId,
       language: languageId,
-      completed: false,
     });
     otherContentId = otherContent._id;
   });

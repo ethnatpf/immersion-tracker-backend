@@ -98,14 +98,12 @@ describe("ContentService update database integration", () => {
   function seedContent(
     title = "The Forest Chronicles",
     owner = userId,
-    completed = false,
     type: Content["type"] = "book",
   ) {
     return contents.create({
       title,
       type,
       user_id: owner,
-      completed,
       language: languageId,
       url: "https://example.com/content",
     });
@@ -209,7 +207,7 @@ describe("ContentService update database integration", () => {
     const before = await sessions.find(owners).lean().exec();
     const input =
       kind === "ordinary edit"
-        ? { title: "New title", completed: true }
+        ? { title: "New title" }
         : {
             language:
               kind === "invalid language"
@@ -229,8 +227,6 @@ describe("ContentService update database integration", () => {
 
   it.each([
     { title: "Updated title" },
-    { completed: true },
-    { title: "Updated title", completed: true },
   ])(
     "persists a partial update and preserves omitted fields: %j",
     async (input) => {
@@ -252,24 +248,6 @@ describe("ContentService update database integration", () => {
     },
   );
 
-  it("allows completed content to be marked incomplete again", async () => {
-    const target = await seedContent("Completed book", userId, true);
-
-    const updated = await service.update(
-      target._id.toHexString(),
-      { completed: false },
-      userId,
-    );
-
-    expect(updated.completed).toBe(false);
-    expect(await contents.findById(target._id).lean().exec()).toMatchObject({
-      title: target.title,
-      completed: false,
-      user_id: userId,
-      language: languageId,
-    });
-  });
-
   it.each([false, true])(
     "changes language with other fields included: %s",
     async (includeOtherFields) => {
@@ -277,7 +255,7 @@ describe("ContentService update database integration", () => {
       const input = {
         language: otherLanguageId.toHexString(),
         ...(includeOtherFields
-          ? { title: "Updated title", completed: true }
+          ? { title: "Updated title" }
           : {}),
       };
       const { __v: _version, ...expected } = {
@@ -310,25 +288,20 @@ describe("ContentService update database integration", () => {
       .lean()
       .exec();
 
-    await service.update(target._id.toHexString(), { completed: true }, userId);
-
-    expect((await contents.findById(target._id).lean().exec())?.completed).toBe(
-      true,
-    );
+    await service.update(target._id.toHexString(), { title: "Updated title" }, userId);
     expect(
       await contents.find(unaffected).sort({ _id: 1 }).lean().exec(),
     ).toEqual(before);
     expect(await contents.countDocuments(owners)).toBe(3);
   });
 
-  it.each(["title", "completed", "language", "all"])(
+  it.each(["title", "language", "all"])(
     "rejects updating another user's content and leaves it unchanged: %s",
     async (field) => {
       const target = await seedContent("Private book", otherUserId);
       const before = target.toObject();
       const all = {
         title: "Stolen book",
-        completed: true,
         language: otherLanguageId.toHexString(),
       };
       const input =
@@ -351,7 +324,7 @@ describe("ContentService update database integration", () => {
     await expect(
       service.update(
         new Types.ObjectId().toHexString(),
-        { completed: true },
+        { title: "Updated title" },
         userId,
       ),
     ).rejects.toBeInstanceOf(NotFoundException);
@@ -370,7 +343,6 @@ describe("ContentService update database integration", () => {
         target._id.toHexString(),
         {
           title: "Updated title",
-          completed: true,
           language: new Types.ObjectId().toHexString(),
         },
         userId,
@@ -409,7 +381,6 @@ describe("ContentService update database integration", () => {
         target._id.toHexString(),
         {
           title: "Existing title",
-          completed: true,
         },
         userId,
       ),
@@ -423,7 +394,7 @@ describe("ContentService update database integration", () => {
   it("allows a title used by another user or by another content type", async () => {
     const target = await seedContent();
     await seedContent("Shared title", otherUserId);
-    await seedContent("Shared title", userId, false, "anime");
+    await seedContent("Shared title", userId, "anime");
 
     await service.update(
       target._id.toHexString(),

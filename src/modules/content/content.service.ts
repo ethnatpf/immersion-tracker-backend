@@ -32,7 +32,7 @@ export class ContentService {
   ): Promise<ContentDetailsResponseDto> {
     const content = await this.contentModel
       .findOne({ _id: id, user_id: userId })
-      .select({ title: 1, type: 1, completed: 1 })
+      .select({ title: 1, type: 1 })
       .lean()
       .exec();
     if (!content) throw new NotFoundException("Content not found");
@@ -62,7 +62,6 @@ export class ContentService {
       id: content._id.toHexString(),
       title: content.title,
       type: content.type,
-      completed: content.completed,
       totalTimeSpent: summary?.totalTimeSpent ?? 0,
       lastImmersionSession: last
         ? {
@@ -132,7 +131,6 @@ export class ContentService {
 
     const changes: UpdateContentDto = {};
     if (input.title !== undefined) changes.title = input.title;
-    if (input.completed !== undefined) changes.completed = input.completed;
     if (input.language !== undefined) changes.language = input.language;
 
     try {
@@ -193,7 +191,6 @@ export class ContentService {
         language: input.language,
         url: input.url,
         user_id: userId,
-        completed: false,
       }).save();
     } catch (error) {
       if (error instanceof mongo.MongoServerError && error.code === 11000) {
