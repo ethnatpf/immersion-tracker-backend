@@ -31,10 +31,6 @@ export class Content {
   @Prop({ type: SchemaTypes.ObjectId, ref: "Language", required: true })
   language: Language;
 
-  // Whether the content has been completed or not
-  @Prop({ required: true })
-  completed: boolean;
-
   // Optional URL to the content
   @Prop()
   url: string;

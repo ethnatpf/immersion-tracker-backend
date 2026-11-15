@@ -30,7 +30,6 @@ describe("PATCH /content/:id", () => {
     type: "book",
     user_id: "auth0|test-user",
     language: languageId,
-    completed: false,
     url: "https://example.com/content",
   };
 
@@ -61,10 +60,8 @@ describe("PATCH /content/:id", () => {
   it.each([
     { title: "Updated title" },
     { title: "a".repeat(350) },
-    { completed: true },
-    { completed: false },
     { language: otherLanguageId },
-    { title: "Updated title", completed: true, language: otherLanguageId },
+    { title: "Updated title", language: otherLanguageId },
   ])(
     "accepts a partial update and returns the updated content: %j",
     async (input) => {
@@ -80,7 +77,7 @@ describe("PATCH /content/:id", () => {
         userId,
       );
       const forwarded = update.mock.calls[0]![1];
-      for (const field of ["title", "completed", "language"] as const) {
+      for (const field of ["title", "language"] as const) {
         if (!(field in input)) expect(forwarded[field]).toBeUndefined();
       }
     },
@@ -101,12 +98,12 @@ describe("PATCH /content/:id", () => {
 
   it("returns 404 when the service cannot find owned content", async () => {
     update.mockRejectedValueOnce(new NotFoundException("Content not found"));
-    const response = await patch().send({ completed: true }).expect(404);
+    const response = await patch().send({ title: "Updated title" }).expect(404);
 
     expect(response.body.message).toBe("Content not found");
     expect(update).toHaveBeenCalledExactlyOnceWith(
       contentId,
-      expect.objectContaining({ completed: true }),
+      expect.objectContaining({ title: "Updated title" }),
       userId,
     );
   });
@@ -151,7 +148,7 @@ describe("PATCH /content/:id", () => {
   ])(
     "rejects malformed content ID %s before invoking the service",
     async (id) => {
-      await patch(id).send({ completed: true }).expect(400);
+      await patch(id).send({ title: "Updated title" }).expect(400);
       expect(update).not.toHaveBeenCalled();
     },
   );
@@ -166,17 +163,15 @@ describe("PATCH /content/:id", () => {
     },
   );
 
-  it.each(
-    [null, "true", "false", "", 0, 1, [], {}].map((completed) => ({
-      completed,
-    })),
-  )(
-    "rejects invalid completion status $completed before invoking the service",
-    async (body) => {
-      await patch().send(body).expect(400);
-      expect(update).not.toHaveBeenCalled();
-    },
-  );
+  it("ignores the removed completion field", async () => {
+    const response = await patch().send({ completed: true }).expect(200);
+    expect(response.body).not.toHaveProperty("completed");
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      contentId,
+      expect.objectContaining({ completed: true }),
+      userId,
+    );
+  });
 
   it.each(
     [

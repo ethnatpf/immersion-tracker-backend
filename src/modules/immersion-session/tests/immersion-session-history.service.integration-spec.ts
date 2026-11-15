@@ -97,7 +97,6 @@ describe("ImmersionSessionService history database integration", () => {
       type,
       user_id: owner,
       language: languageId,
-      completed: true,
     });
   }
 

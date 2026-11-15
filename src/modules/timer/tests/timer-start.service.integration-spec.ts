@@ -70,21 +70,18 @@ describe("TimerService start database integration", () => {
         type: "anime",
         language: language._id,
         user_id: userId,
-        completed: false,
       },
       {
         title: "Second timer integration content",
         type: "book",
         language: language._id,
         user_id: userId,
-        completed: false,
       },
       {
         title: "Other user's timer integration content",
         type: "book",
         language: language._id,
         user_id: otherUserId,
-        completed: false,
       },
     ]);
     contentId = content!._id.toString();

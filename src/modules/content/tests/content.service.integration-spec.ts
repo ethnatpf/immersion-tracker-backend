@@ -90,7 +90,6 @@ describe("ContentService database integration", () => {
         title: input.title,
         type: input.type,
         user_id: userId,
-        completed: false,
       });
       expect(stored?.language.toString()).toBe(languageId);
       expect(stored?.url).toBeUndefined();
@@ -213,7 +212,6 @@ describe("ContentService database integration", () => {
         type?: Content["type"];
         language?: string;
         user_id?: string;
-        completed?: boolean;
       }[],
     ) {
       return contents.insertMany(
@@ -221,7 +219,6 @@ describe("ContentService database integration", () => {
           type: "book",
           language: languageId,
           user_id: userId,
-          completed: false,
           url: "https://example.com/content",
           ...entry,
         })),
@@ -438,9 +435,9 @@ describe("ContentService database integration", () => {
       });
     });
 
-    it("keeps different types with the same title and includes completed content", async () => {
+    it("keeps different types with the same title", async () => {
       await seed([
-        { title: "Forest", type: "manga", completed: true },
+        { title: "Forest", type: "manga" },
         { title: "Forest", type: "anime" },
       ]);
       expect(await search({ q: "forest" })).toEqual({

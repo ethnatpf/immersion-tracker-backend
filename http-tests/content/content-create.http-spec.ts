@@ -70,7 +70,6 @@ describe("POST /content", () => {
       expect(response.body).toMatchObject({
         ...validContent,
         user_id: userId,
-        completed: false,
       });
     } finally {
       create.mockRestore();
@@ -90,7 +89,6 @@ describe("POST /content", () => {
     const content = new model({
       ...validContent,
       user_id: userId,
-      completed: false,
       __v: 0,
     });
     const create = vi
@@ -100,7 +98,6 @@ describe("POST /content", () => {
       const response = await postContent().send(validContent).expect(201);
       expect(response.body).toMatchObject({
         ...validContent,
-        completed: false,
       });
       expect(response.body).not.toHaveProperty("__v");
       expect(content.__v).toBe(0);

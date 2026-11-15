@@ -1,5 +1,4 @@
 import {
-  IsBoolean,
   IsMongoId,
   IsNotEmpty,
   IsString,
@@ -13,10 +12,6 @@ export class UpdateContentDto {
   @IsNotEmpty()
   @MaxLength(350)
   title?: string;
-
-  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
-  @IsBoolean()
-  completed?: boolean;
 
   @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   @IsMongoId()

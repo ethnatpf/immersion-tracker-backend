@@ -21,9 +21,6 @@ export class ContentLastImmersionSessionResponseDto {
 }
 
 export class ContentDetailsResponseDto extends ContentSearchItemResponseDto {
-  @ApiProperty()
-  completed: boolean;
-
   @ApiProperty({ description: "Total immersion duration in seconds" })
   totalTimeSpent: number;
 

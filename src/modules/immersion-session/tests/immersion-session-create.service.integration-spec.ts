@@ -75,7 +75,6 @@ describe("ImmersionSessionService create database integration", () => {
       type: "anime",
       language: language._id,
       user_id: userId,
-      completed: false,
     });
     contentId = content._id.toString();
     const otherContent = await contents.create({
@@ -83,7 +82,6 @@ describe("ImmersionSessionService create database integration", () => {
       type: "book",
       language: language._id,
       user_id: otherUserId,
-      completed: false,
     });
     otherContentId = otherContent._id.toString();
     input = { content: contentId, duration: 1200 };
@@ -113,7 +111,6 @@ describe("ImmersionSessionService create database integration", () => {
         type,
         language: languageId,
         user_id: userId,
-        completed: false,
       });
       const created = await service.create(
         { ...input, content: entry._id.toHexString() },

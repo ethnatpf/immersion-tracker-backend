@@ -16,7 +16,6 @@ describe("GET /content/:id", () => {
     id: contentId,
     title: "The Forest Chronicles",
     type: "book",
-    completed: false,
     totalTimeSpent: 1837,
     lastImmersionSession: {
       id: "507f1f77bcf86cd799439012",
