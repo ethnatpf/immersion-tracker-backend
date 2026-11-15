@@ -39,6 +39,9 @@ export class SessionProgress {
     ],
   })
   end: number;
+
+  @Prop({ type: Boolean })
+  auto?: boolean;
 }
 
 export const SessionProgressSchema =

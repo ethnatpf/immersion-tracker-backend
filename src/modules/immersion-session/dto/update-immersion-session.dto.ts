@@ -23,6 +23,7 @@ export class UpdateImmersionSessionParamsDto {
 export class UpdateSessionProgressDto extends PickType(SessionProgressDto, [
   "start",
   "end",
+  "auto",
 ] as const) {
   @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   @IsIn(SESSION_PROGRESS_UNITS)

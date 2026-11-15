@@ -11,6 +11,11 @@ export class SessionProgressResponseDto {
 
   @ApiProperty({ type: "integer", minimum: 1, description: "Inclusive end" })
   end: number;
+
+  @ApiPropertyOptional({
+    description: "Whether the session duration was automatically calculated from this progress",
+  })
+  auto?: boolean;
 }
 
 export class ImmersionSessionResponseDto {

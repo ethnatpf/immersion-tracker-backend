@@ -64,6 +64,12 @@ export class ImmersionSessionService {
         unit,
         start: input.progress.start,
         end: input.progress.end,
+        ...(input.progress.auto === undefined &&
+        session.progress?.auto !== undefined
+          ? { auto: session.progress.auto }
+          : input.progress.auto === undefined
+            ? {}
+            : { auto: input.progress.auto }),
       };
     }
 
